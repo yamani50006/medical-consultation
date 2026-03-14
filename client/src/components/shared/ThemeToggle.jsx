@@ -30,7 +30,7 @@ export default function ThemeToggle() {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative z-[70]">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
@@ -48,7 +48,7 @@ export default function ThemeToggle() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.96 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 top-14 z-50 w-40 rounded-3xl border border-border/70 bg-popover/95 p-2 shadow-2xl backdrop-blur-xl"
+            className="absolute right-0 top-14 z-[80] w-40 max-w-[calc(100vw-1.5rem)] rounded-3xl border border-border/70 bg-popover/95 p-2 shadow-2xl backdrop-blur-xl"
           >
             {options.map((option) => {
               const Icon = option.icon;

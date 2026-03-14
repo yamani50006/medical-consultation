@@ -34,17 +34,17 @@ export default function UserMenu() {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative z-[70]">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-3 rounded-full border border-border/70 bg-card/80 px-2 py-2 text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+        className="inline-flex max-w-[240px]  items-center gap-2 rounded-full border border-border/70 bg-card/80 px-4 py-2 text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
       >
         <span className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-bold text-primary-foreground">
           {initials || "MC"}
         </span>
-        <span className="hidden pr-2 sm:block">
-          <span className="block text-sm font-semibold leading-none">{user?.fullName}</span>
+        <span className="hidden max-w-[150px] pr-2 lg:block text-center">
+          <span className="block truncate text-sm font-semibold leading-none ">{user?.fullName}</span>
           <span className="mt-1 block text-xs uppercase tracking-[0.16em] text-muted-foreground">
             {formatRole(user?.role)}
           </span>
@@ -58,7 +58,7 @@ export default function UserMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             transition={{ duration: 0.18 }}
-            className="absolute right-0 top-16 z-50 w-64 rounded-[28px] border border-border/70 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl"
+            className="absolute right-0 top-16 z-[80] w-[min(18rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] rounded-[28px] border border-border/70 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl"
           >
             <div className="rounded-3xl bg-secondary/70 p-4">
               <div className="flex items-center gap-3">
