@@ -1,8 +1,12 @@
 import axios from "axios";
 import { clearStoredUser, clearToken, getToken } from "../utils/token";
 
+const defaultBaseUrl = import.meta.env.PROD
+  ? "https://medical-consultation-khaki.vercel.app/api/v1"
+  : "http://localhost:5000/api/v1";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL || defaultBaseUrl,
   headers: {
     "Content-Type": "application/json"
   }
