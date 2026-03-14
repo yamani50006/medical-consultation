@@ -44,6 +44,28 @@ enum AppointmentStatus {
   CANCELLED
 }
 
+enum TreatmentPlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  GENERIC
+  TREATMENT_PLAN_CREATED
+  TREATMENT_PLAN_UPDATED
+  APPOINTMENT_BOOKED
+  CONSULTATION_ACCEPTED
+  FOLLOW_UP_SUBMITTED
+  DOCTOR_APPROVED
+  GROUP_POST_PUBLISHED
+}
+
+enum GroupVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 model User {
   id             String          @id @default(cuid())
   fullName       String
@@ -55,21 +77,27 @@ model User {
   updatedAt      DateTime        @updatedAt
   patientProfile PatientProfile?
   doctorProfile  DoctorProfile?
+  notifications  Notification[]
 }
 
 model PatientProfile {
-  id                 String         @id @default(cuid())
-  userId             String         @unique
+  id                 String            @id @default(cuid())
+  userId             String            @unique
   gender             String
   dateOfBirth        DateTime
   bloodType          String?
   chronicDiseases    String?
   currentMedications String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   consultations      Consultation[]
   appointments       Appointment[]
+  treatmentPlans     TreatmentPlan[]
+  followUps          FollowUpEntry[]
+  medicalRecord      MedicalRecord?
+  reviews            Review[]
+  groupMemberships   GroupMembership[]
 }
 
 model DoctorProfile {
@@ -87,17 +115,21 @@ model DoctorProfile {
   posts             Post[]
   consultations     Consultation[]
   appointments      Appointment[]
+  treatmentPlans    TreatmentPlan[]
+  reviews           Review[]
+  groups            Group[]
+  groupPosts        GroupPost[]
 }
 
 model Post {
-  id             String      @id @default(cuid())
+  id             String        @id @default(cuid())
   doctorId       String
   title          String
   content        String
   specialization String
-  status         PostStatus  @default(PUBLISHED)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  status         PostStatus    @default(PUBLISHED)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   doctor         DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   @@index([doctorId])
@@ -116,6 +148,8 @@ model Consultation {
   updatedAt      DateTime           @updatedAt
   patient        PatientProfile     @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor         DoctorProfile      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  treatmentPlans TreatmentPlan[]
+  reviews        Review[]
 
   @@index([patientId])
   @@index([doctorId])
@@ -133,8 +167,159 @@ model Appointment {
   updatedAt       DateTime          @updatedAt
   patient         PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor          DoctorProfile     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  reviews         Review[]
 
   @@index([patientId])
   @@index([doctorId])
   @@index([appointmentDate])
+}
+
+model TreatmentPlan {
+  id               String              @id @default(cuid())
+  patientId        String
+  doctorId         String
+  consultationId   String?
+  title            String
+  diagnosisSummary String
+  instructions     String
+  startDate        DateTime
+  endDate          DateTime
+  status           TreatmentPlanStatus @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  patient          PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor           DoctorProfile       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  consultation     Consultation?       @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  medications      Medication[]
+  followUps        FollowUpEntry[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([consultationId])
+  @@index([status])
+}
+
+model Medication {
+  id              String        @id @default(cuid())
+  treatmentPlanId String
+  medicationName  String
+  dosage          String
+  frequency       String
+  durationInDays  Int
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  treatmentPlan   TreatmentPlan @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+
+  @@index([treatmentPlanId])
+}
+
+model FollowUpEntry {
+  id             String        @id @default(cuid())
+  treatmentPlanId String
+  patientId      String
+  symptomsStatus String
+  painLevel      Int?
+  sideEffects    String?
+  notes          String?
+  doctorNote     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  treatmentPlan  TreatmentPlan @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+  patient        PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([treatmentPlanId])
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+model MedicalRecord {
+  id               String         @id @default(cuid())
+  patientId        String         @unique
+  allergies        String?
+  chronicDiseases  String?
+  surgeriesHistory String?
+  familyHistory    String?
+  lifestyleNotes   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  patient          PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id             String         @id @default(cuid())
+  patientId      String
+  doctorId       String
+  consultationId String?
+  appointmentId  String?
+  rating         Int
+  comment        String?
+  createdAt      DateTime       @default(now())
+  patient        PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor         DoctorProfile  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  consultation   Consultation?  @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  appointment    Appointment?   @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([doctorId])
+  @@index([createdAt])
+  @@unique([patientId, consultationId])
+  @@unique([patientId, appointmentId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(GENERIC)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model Group {
+  id                String          @id @default(cuid())
+  name              String
+  description       String
+  category          String
+  visibility        GroupVisibility @default(PUBLIC)
+  createdByDoctorId String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  createdByDoctor   DoctorProfile   @relation(fields: [createdByDoctorId], references: [id], onDelete: Cascade)
+  memberships       GroupMembership[]
+  posts             GroupPost[]
+
+  @@index([createdByDoctorId])
+  @@index([visibility])
+  @@index([category])
+}
+
+model GroupMembership {
+  id        String         @id @default(cuid())
+  groupId   String
+  patientId String
+  joinedAt  DateTime       @default(now())
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  patient   PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, patientId])
+  @@index([patientId])
+}
+
+model GroupPost {
+  id        String        @id @default(cuid())
+  groupId   String
+  doctorId  String
+  title     String
+  content   String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  group     Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  doctor    DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([doctorId])
 }

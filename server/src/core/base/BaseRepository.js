@@ -19,6 +19,14 @@ export default class BaseRepository {
     });
   }
 
+  findUnique(where, select, include) {
+    return this.model.findUnique({
+      where,
+      ...(select ? { select } : {}),
+      ...(include ? { include } : {})
+    });
+  }
+
   findOne(where, select, include) {
     return this.model.findFirst({
       where,
@@ -40,9 +48,24 @@ export default class BaseRepository {
     });
   }
 
+  updateWhere(where, data, select, include) {
+    return this.model.update({
+      where,
+      data,
+      ...(select ? { select } : {}),
+      ...(include ? { include } : {})
+    });
+  }
+
   delete(id) {
     return this.model.delete({
       where: { id }
+    });
+  }
+
+  deleteWhere(where) {
+    return this.model.delete({
+      where
     });
   }
 

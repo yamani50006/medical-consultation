@@ -1,12 +1,14 @@
 import BaseService from "../../core/base/BaseService.js";
 import AppError from "../../core/errors/AppError.js";
 import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import NotificationsService from "../notifications/notifications.service.js";
 import AdminRepository from "./admin.repository.js";
 
 export default class AdminService extends BaseService {
   constructor() {
     super();
     this.adminRepository = new AdminRepository();
+    this.notificationsService = new NotificationsService();
   }
 
   async listPendingDoctors(query) {
@@ -32,7 +34,20 @@ export default class AdminService extends BaseService {
       throw new AppError("Doctor already approved", 400, "DOCTOR_ALREADY_APPROVED");
     }
 
-    return this.adminRepository.updateDoctorApproval(doctorId, "APPROVED", "ACTIVE", true);
+    const updatedDoctor = await this.adminRepository.updateDoctorApproval(
+      doctorId,
+      "APPROVED",
+      "ACTIVE",
+      true
+    );
+
+    await this.notificationsService.createForUser(updatedDoctor.user.id, {
+      type: "DOCTOR_APPROVED",
+      title: "تمت الموافقة على ملف الطبيب",
+      message: "تمت الموافقة على ملفك الطبي وهو الآن نشط."
+    });
+
+    return updatedDoctor;
   }
 
   async rejectDoctor(doctorId) {

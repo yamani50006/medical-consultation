@@ -1,11 +1,15 @@
 export function getStatusBadgeVariant(status = "") {
   const normalized = status.toLowerCase();
 
-  if (["approved", "published", "active", "completed", "scheduled", "accepted", "verified"].includes(normalized)) {
+  if (
+    ["approved", "published", "active", "completed", "scheduled", "accepted", "verified", "public"].includes(
+      normalized
+    )
+  ) {
     return "success";
   }
 
-  if (["pending", "draft"].includes(normalized)) {
+  if (["pending", "draft", "private"].includes(normalized)) {
     return "warning";
   }
 
@@ -29,6 +33,8 @@ export function formatStatus(status = "") {
     verified: "موثق",
     pending: "قيد الانتظار",
     draft: "مسودة",
+    public: "عام",
+    private: "خاص",
     cancelled: "ملغي",
     rejected: "مرفوض"
   };
@@ -44,4 +50,8 @@ export function formatRole(role = "") {
   };
 
   return translations[role] || role;
+}
+
+export function formatVisibility(value = "") {
+  return formatStatus(value);
 }

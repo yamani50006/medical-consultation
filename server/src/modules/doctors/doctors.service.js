@@ -1,12 +1,14 @@
 import BaseService from "../../core/base/BaseService.js";
 import AppError from "../../core/errors/AppError.js";
 import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import ReviewsRepository from "../reviews/reviews.repository.js";
 import DoctorsRepository from "./doctors.repository.js";
 
 export default class DoctorsService extends BaseService {
   constructor() {
     super();
     this.doctorsRepository = new DoctorsRepository();
+    this.reviewsRepository = new ReviewsRepository();
   }
 
   async listDoctors(query) {
@@ -36,9 +38,18 @@ export default class DoctorsService extends BaseService {
       this.doctorsRepository.listApprovedDoctors(where, { skip, limit }),
       this.doctorsRepository.count(where)
     ]);
+    const ratingSummaryMap = await this.reviewsRepository.getDoctorRatingSummaryMap(
+      items.map((item) => item.id)
+    );
 
     return {
-      items,
+      items: items.map((item) => ({
+        ...item,
+        ratingSummary: ratingSummaryMap[item.id] || {
+          averageRating: 0,
+          totalReviews: 0
+        }
+      })),
       meta: buildPaginationMeta({ page, limit, total })
     };
   }
@@ -48,7 +59,16 @@ export default class DoctorsService extends BaseService {
     if (!doctor) {
       throw new AppError("Doctor not found", 404, "DOCTOR_NOT_FOUND");
     }
-    return doctor;
+
+    const ratingSummary = await this.reviewsRepository.getDoctorRatingSummary(id);
+
+    return {
+      ...doctor,
+      ratingSummary: {
+        averageRating: ratingSummary._avg.rating ? Number(ratingSummary._avg.rating.toFixed(1)) : 0,
+        totalReviews: ratingSummary._count._all
+      }
+    };
   }
 
   async getMyProfile(userId) {

@@ -11,7 +11,7 @@ export default class AppointmentsRepository extends BaseRepository {
       where: { userId },
       include: {
         user: {
-          select: { id: true, status: true }
+          select: { id: true, fullName: true, status: true }
         }
       }
     });
@@ -22,7 +22,7 @@ export default class AppointmentsRepository extends BaseRepository {
       where: { userId },
       include: {
         user: {
-          select: { id: true, status: true }
+          select: { id: true, fullName: true, status: true }
         }
       }
     });
@@ -33,7 +33,7 @@ export default class AppointmentsRepository extends BaseRepository {
       where: { id },
       include: {
         user: {
-          select: { id: true, status: true }
+          select: { id: true, fullName: true, status: true }
         }
       }
     });

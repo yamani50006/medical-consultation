@@ -1,6 +1,7 @@
 import BaseService from "../../core/base/BaseService.js";
 import AppError from "../../core/errors/AppError.js";
 import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import NotificationsService from "../notifications/notifications.service.js";
 import ConsultationsRepository from "./consultations.repository.js";
 
 const UPDATABLE_STATUSES = new Set(["ACCEPTED", "COMPLETED", "CANCELLED"]);
@@ -9,6 +10,7 @@ export default class ConsultationsService extends BaseService {
   constructor() {
     super();
     this.consultationsRepository = new ConsultationsRepository();
+    this.notificationsService = new NotificationsService();
   }
 
   async createConsultation(userId, payload) {
@@ -103,10 +105,20 @@ export default class ConsultationsService extends BaseService {
       throw new AppError("Invalid consultation status", 400, "INVALID_STATUS");
     }
 
-    return this.consultationsRepository.update(consultationId, {
+    const updatedConsultation = await this.consultationsRepository.update(consultationId, {
       doctorResponse: payload.doctorResponse,
       status
     });
+
+    if (status === "ACCEPTED") {
+      await this.notificationsService.createForUser(consultation.patient.user.id, {
+        type: "CONSULTATION_ACCEPTED",
+        title: "تم قبول الاستشارة",
+        message: `وافق ${doctor.user.fullName} على طلب الاستشارة الخاص بك.`
+      });
+    }
+
+    return updatedConsultation;
   }
 
   async updateConsultationStatus(userId, consultationId, payload) {

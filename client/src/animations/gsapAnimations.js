@@ -46,3 +46,26 @@ export function animateCounter(node, value, formatter = (next) => Math.round(nex
 
   return () => tween.kill();
 }
+
+export function animateDashboardWidgets(container, selector = "[data-dashboard-widget]") {
+  if (!container || prefersReducedMotion()) {
+    return () => {};
+  }
+
+  const items = Array.from(container.querySelectorAll(selector));
+  if (items.length === 0) {
+    return () => {};
+  }
+
+  const ctx = gsap.context(() => {
+    gsap.from(items, {
+      opacity: 0,
+      y: 26,
+      duration: 0.7,
+      stagger: 0.08,
+      ease: "power3.out"
+    });
+  }, container);
+
+  return () => ctx.revert();
+}

@@ -24,9 +24,22 @@ export default function Navbar() {
   const links = [
     { to: "/posts", label: "المنشورات", show: true },
     { to: "/dashboard", label: "لوحة التحكم", show: isAuthenticated },
+    {
+      to: user?.role === "PATIENT" ? "/patient/treatment-plans" : "/doctor/treatment-plans",
+      label: "الخطط العلاجية",
+      show: isAuthenticated && user?.role !== "ADMIN"
+    },
+    { to: "/groups", label: "المجموعات", show: isAuthenticated && user?.role !== "ADMIN" },
     { to: "/doctor-posts", label: "استوديو الطبيب", show: user?.role === "DOCTOR" },
     { to: "/consultations", label: "الاستشارات", show: isAuthenticated && user?.role !== "ADMIN" },
     { to: "/appointments", label: "المواعيد", show: isAuthenticated && user?.role !== "ADMIN" },
+    { to: "/patient/notifications", label: "الإشعارات", show: user?.role === "PATIENT" },
+    {
+      to: user?.role === "PATIENT" ? "/patient/reviews" : "/doctor/reviews",
+      label: "التقييمات",
+      show: user?.role === "PATIENT" || user?.role === "DOCTOR"
+    },
+    { to: "/admin/analytics", label: "التحليلات", show: user?.role === "ADMIN" },
     { to: "/admin/pending-doctors", label: "الإدارة", show: user?.role === "ADMIN" }
   ].filter((item) => item.show);
 

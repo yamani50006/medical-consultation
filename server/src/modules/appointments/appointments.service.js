@@ -1,6 +1,7 @@
 import BaseService from "../../core/base/BaseService.js";
 import AppError from "../../core/errors/AppError.js";
 import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import NotificationsService from "../notifications/notifications.service.js";
 import AppointmentsRepository from "./appointments.repository.js";
 
 const STATUS_SET = new Set(["SCHEDULED", "COMPLETED", "CANCELLED"]);
@@ -9,6 +10,7 @@ export default class AppointmentsService extends BaseService {
   constructor() {
     super();
     this.appointmentsRepository = new AppointmentsRepository();
+    this.notificationsService = new NotificationsService();
   }
 
   async bookAppointment(userId, payload) {
@@ -30,13 +32,21 @@ export default class AppointmentsService extends BaseService {
       throw new AppError("Appointment date must be in the future", 400, "INVALID_APPOINTMENT_DATE");
     }
 
-    return this.appointmentsRepository.create({
+    const appointment = await this.appointmentsRepository.create({
       patientId: patient.id,
       doctorId: doctor.id,
       appointmentDate: payload.appointmentDate,
       notes: payload.notes || null,
       status: "SCHEDULED"
     });
+
+    await this.notificationsService.createForUser(doctor.user.id, {
+      type: "APPOINTMENT_BOOKED",
+      title: "تم حجز موعد جديد",
+      message: `قام ${patient.user.fullName} بحجز موعد جديد معك.`
+    });
+
+    return appointment;
   }
 
   async listMyAppointments(userId, query) {

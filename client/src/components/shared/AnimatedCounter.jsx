@@ -1,16 +1,7 @@
-import { useEffect, useRef } from "react";
-import { animateCounter } from "../../animations/gsapAnimations";
+import { useCounterAnimation } from "../../hooks/useCounterAnimation";
 
 export default function AnimatedCounter({ value, className, suffix = "", formatter }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    return animateCounter(
-      ref.current,
-      value,
-      formatter || ((next) => `${Math.round(next)}${suffix}`)
-    );
-  }, [formatter, suffix, value]);
+  const ref = useCounterAnimation(value, formatter || ((next) => `${Math.round(next)}${suffix}`));
 
   return <span ref={ref} className={className} />;
 }
