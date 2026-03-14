@@ -1,0 +1,144 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 33% 99%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 176 74% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 24% 95%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 24% 94%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 191 84% 56%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 26% 88%;
+    --input: 215 26% 88%;
+    --ring: 176 74% 37%;
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    --background: 221 39% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 30% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 30% 12%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 176 70% 44%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 19% 16%;
+    --muted-foreground: 217 13% 70%;
+    --accent: 191 84% 56%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 19% 22%;
+    --input: 217 19% 22%;
+    --ring: 176 70% 44%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased transition-colors duration-300;
+    margin: 0;
+    min-height: 100vh;
+    direction: rtl;
+    text-align: right;
+    background-image:
+      radial-gradient(circle at top left, rgba(34, 211, 238, 0.12), transparent 32%),
+      radial-gradient(circle at top right, rgba(20, 184, 166, 0.14), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(241, 245, 249, 0.96));
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at top left, rgba(34, 211, 238, 0.08), transparent 30%),
+      radial-gradient(circle at top right, rgba(20, 184, 166, 0.1), transparent 24%),
+      linear-gradient(180deg, rgba(8, 15, 30, 0.98), rgba(7, 13, 26, 1));
+  }
+
+  a {
+    @apply transition-colors duration-200;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: rgba(20, 184, 166, 0.18);
+  }
+}
+
+@layer utilities {
+  .bg-grid-fade {
+    background-image:
+      linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(circle at center, black 30%, transparent 85%);
+  }
+
+  .glass-panel {
+    @apply border border-white/15 bg-white/70 backdrop-blur-xl dark:bg-slate-950/45;
+  }
+
+  .hero-ring {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.25),
+      0 20px 60px -26px rgba(13, 148, 136, 0.55);
+  }
+
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.26), transparent);
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  .dark .skeleton-shimmer::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,32 @@
+const TOKEN_KEY = "mc_token";
+const USER_KEY = "mc_user";
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token) {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+export function getStoredUser() {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    return null;
+  }
+}
+
+export function setStoredUser(user) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export function clearStoredUser() {
+  localStorage.removeItem(USER_KEY);
+}

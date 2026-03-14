@@ -1,0 +1,13 @@
+import { cn } from "../../utils/cn";
+
+export default function Skeleton({ className, ...props }) {
+  return (
+    <div
+      className={cn(
+        "skeleton-shimmer rounded-2xl bg-slate-200/80 dark:bg-slate-800/80",
+        className
+      )}
+      {...props}
+    />
+  );
+}
