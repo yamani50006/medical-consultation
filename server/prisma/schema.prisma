@@ -38,6 +38,18 @@ enum ConsultationStatus {
   CANCELLED
 }
 
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  SEEN
+}
+
 enum AppointmentStatus {
   SCHEDULED
   COMPLETED
@@ -59,6 +71,14 @@ enum NotificationType {
   FOLLOW_UP_SUBMITTED
   DOCTOR_APPROVED
   GROUP_POST_PUBLISHED
+  CHAT_MESSAGE
+  CONVERSATION_CREATED
+  MESSAGE_SEEN
+}
+
+enum PresenceStatus {
+  ONLINE
+  OFFLINE
 }
 
 enum GroupVisibility {
@@ -67,18 +87,21 @@ enum GroupVisibility {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  fullName       String
-  email          String          @unique
-  password       String
-  profileImageUrl String?
-  role           Role
-  status         UserStatus      @default(ACTIVE)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  patientProfile PatientProfile?
-  doctorProfile  DoctorProfile?
-  notifications  Notification[]
+  id                       String                  @id @default(cuid())
+  fullName                 String
+  email                    String                  @unique
+  password                 String
+  profileImageUrl          String?
+  role                     Role
+  status                   UserStatus              @default(ACTIVE)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  patientProfile           PatientProfile?
+  doctorProfile            DoctorProfile?
+  notifications            Notification[]
+  conversationParticipants ConversationParticipant[]
+  messages                 Message[]
+  presence                 UserPresence?
 }
 
 model PatientProfile {
@@ -95,6 +118,7 @@ model PatientProfile {
   updatedAt          DateTime          @updatedAt
   user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   consultations      Consultation[]
+  conversations      Conversation[]
   appointments       Appointment[]
   treatmentPlans     TreatmentPlan[]
   followUps          FollowUpEntry[]
@@ -123,6 +147,7 @@ model DoctorProfile {
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts             Post[]
   consultations     Consultation[]
+  conversations     Conversation[]
   appointments      Appointment[]
   treatmentPlans    TreatmentPlan[]
   reviews           Review[]
@@ -157,12 +182,90 @@ model Consultation {
   updatedAt      DateTime           @updatedAt
   patient        PatientProfile     @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor         DoctorProfile      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  conversation   Conversation?
   treatmentPlans TreatmentPlan[]
   reviews        Review[]
 
   @@index([patientId])
   @@index([doctorId])
   @@index([status])
+}
+
+model Conversation {
+  id                String                    @id @default(cuid())
+  consultationId    String                    @unique
+  patientId         String
+  doctorId          String
+  lastMessageAt     DateTime?
+  lastMessagePreview String?
+  lastMessageType   MessageType?
+  lastMessageStatus MessageStatus?
+  lastMessageSenderId String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  consultation      Consultation              @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  patient           PatientProfile            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor            DoctorProfile             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  participants      ConversationParticipant[]
+  messages          Message[]
+  notifications     Notification[]
+
+  @@index([patientId, lastMessageAt])
+  @@index([doctorId, lastMessageAt])
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             String        @id @default(cuid())
+  conversationId String
+  userId         String
+  role           Role
+  unreadCount    Int           @default(0)
+  lastReadAt     DateTime?
+  joinedAt       DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, unreadCount])
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id             String             @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String?
+  type           MessageType        @default(TEXT)
+  status         MessageStatus      @default(SENT)
+  deliveredAt    DateTime?
+  seenAt         DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  conversation   Conversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  attachments    MessageAttachment[]
+  notifications  Notification[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@index([status, createdAt])
+}
+
+model MessageAttachment {
+  id           String   @id @default(cuid())
+  messageId    String
+  storageKey   String   @unique
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  fileExtension String?
+  createdAt    DateTime @default(now())
+  message      Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
 }
 
 model Appointment {
@@ -276,16 +379,41 @@ model Review {
 }
 
 model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType @default(GENERIC)
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String           @id @default(cuid())
+  userId         String
+  conversationId String?
+  messageId      String?
+  type           NotificationType @default(GENERIC)
+  title          String
+  message        String
+  entityType     String?
+  entityId       String?
+  metadata       Json?
+  isRead         Boolean          @default(false)
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now()) @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  relatedMessage Message?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
 
   @@index([userId, isRead, createdAt])
+  @@index([conversationId, createdAt])
+  @@index([messageId, createdAt])
+}
+
+model UserPresence {
+  id          String         @id @default(cuid())
+  userId      String         @unique
+  status      PresenceStatus @default(OFFLINE)
+  socketCount Int            @default(0)
+  lastSeenAt  DateTime?
+  lastActiveAt DateTime      @default(now())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, lastActiveAt])
 }
 
 model Group {

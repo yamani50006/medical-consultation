@@ -79,10 +79,27 @@ const translations = {
   "License number cannot be changed": "لا يمكن تعديل رقم الترخيص بعد التسجيل.",
   "Invalid consultation status": "حالة الاستشارة غير صالحة.",
   "You can only respond to assigned consultations": "يمكن للطبيب الرد على الاستشارات المسندة إليه فقط.",
-  "You can only update assigned consultations": "يمكن للطبيب تحديث حالة الاستشارات المسندة إليه فقط."
+  "You can only update assigned consultations": "يمكن للطبيب تحديث حالة الاستشارات المسندة إليه فقط.",
+  "Conversation not found": "تعذر العثور على المحادثة.",
+  "Message not found": "تعذر العثور على الرسالة.",
+  "Attachment not found": "تعذر العثور على المرفق.",
+  "Attachment file not found": "ملف المرفق غير موجود.",
+  "Attachment file is required": "يجب اختيار ملف قبل الرفع.",
+  "Too many attachments": "تم تجاوز الحد الأقصى للمرفقات.",
+  "Duplicate attachment token": "تم تكرار المرفق أكثر من مرة.",
+  "Upload rate limit exceeded": "تم تجاوز حد رفع الملفات. حاول مجددًا بعد قليل.",
+  "Message rate limit exceeded": "تم تجاوز حد إرسال الرسائل. حاول مجددًا بعد قليل.",
+  "Message body or attachment is required": "يجب إدخال نص أو مرفق للرسالة.",
+  "Unsupported attachment type": "نوع الملف غير مدعوم.",
+  "Attachment exceeds the maximum allowed size": "حجم الملف أكبر من الحد المسموح.",
+  "Invalid upload token": "رمز المرفق غير صالح.",
+  "You cannot access this attachment": "لا تملك صلاحية الوصول إلى هذا المرفق.",
+  "You cannot create a conversation for this consultation": "لا تملك صلاحية إنشاء محادثة لهذه الاستشارة.",
+  "You can only update your own notifications": "يمكنك تحديث إشعاراتك فقط.",
+  "Socket operation failed": "تعذر تنفيذ العملية الفورية."
 };
 
 export function getErrorMessage(error, fallback = "حدث خطأ غير متوقع.") {
-  const message = error?.response?.data?.message || fallback;
+  const message = error?.response?.data?.message || error?.message || fallback;
   return translations[message] || message || fallback;
 }

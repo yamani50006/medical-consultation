@@ -26,7 +26,10 @@ export const listNotificationsQuerySchema = z.object({
       "consultation_accepted",
       "follow_up_submitted",
       "doctor_approved",
-      "group_post_published"
+      "group_post_published",
+      "chat_message",
+      "conversation_created",
+      "message_seen"
     ])
     .optional()
 });

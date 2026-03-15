@@ -1,5 +1,8 @@
 import BaseService from "../../core/base/BaseService.js";
+import { SOCKET_EVENTS } from "../../core/constants/socket-events.js";
 import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import { emitToUser } from "../../infrastructure/socket/socketEmitter.js";
+import { mapNotification } from "./notifications.mapper.js";
 import NotificationsRepository from "./notifications.repository.js";
 
 export default class NotificationsService extends BaseService {
@@ -9,12 +12,7 @@ export default class NotificationsService extends BaseService {
   }
 
   createForUser(userId, payload) {
-    return this.notificationsRepository.create({
-      userId,
-      type: payload.type || "GENERIC",
-      title: payload.title,
-      message: payload.message
-    });
+    return this.createNotificationRecord(userId, payload);
   }
 
   async createForUsers(userIds, payload) {
@@ -24,14 +22,21 @@ export default class NotificationsService extends BaseService {
       return { count: 0 };
     }
 
-    return this.notificationsRepository.createMany(
+    const result = await this.notificationsRepository.createMany(
       uniqueUserIds.map((userId) => ({
         userId,
         type: payload.type || "GENERIC",
         title: payload.title,
-        message: payload.message
+        message: payload.message,
+        entityType: payload.entityType || null,
+        entityId: payload.entityId || null,
+        conversationId: payload.conversationId || null,
+        messageId: payload.messageId || null,
+        metadata: payload.metadata || null
       }))
     );
+
+    return result;
   }
 
   async listMyNotifications(userId, query) {
@@ -46,14 +51,18 @@ export default class NotificationsService extends BaseService {
       where.isRead = query.isRead;
     }
 
-    const [items, total] = await Promise.all([
+    const [items, total, unreadCount] = await Promise.all([
       this.notificationsRepository.listByUser(userId, where, { skip, limit }),
-      this.notificationsRepository.count({ userId, ...where })
+      this.notificationsRepository.count({ userId, ...where }),
+      this.notificationsRepository.countUnreadByUser(userId)
     ]);
 
     return {
-      items,
-      meta: buildPaginationMeta({ page, limit, total })
+      items: items.map(mapNotification),
+      meta: {
+        ...buildPaginationMeta({ page, limit, total }),
+        unreadCount
+      }
     };
   }
 
@@ -72,13 +81,50 @@ export default class NotificationsService extends BaseService {
     );
 
     if (notification.isRead) {
-      return notification;
+      return mapNotification(notification);
     }
 
-    return this.notificationsRepository.update(notificationId, { isRead: true });
+    const updatedNotification = await this.notificationsRepository.update(notificationId, {
+      isRead: true,
+      readAt: new Date()
+    });
+
+    const mappedNotification = mapNotification(updatedNotification);
+    emitToUser(userId, SOCKET_EVENTS.notification.updated, {
+      notification: mappedNotification
+    });
+
+    return mappedNotification;
   }
 
-  markAllAsRead(userId) {
-    return this.notificationsRepository.markAllAsRead(userId);
+  async markAllAsRead(userId) {
+    const result = await this.notificationsRepository.markAllAsRead(userId);
+
+    emitToUser(userId, SOCKET_EVENTS.notification.updated, {
+      allRead: true
+    });
+
+    return result;
+  }
+
+  async createNotificationRecord(userId, payload) {
+    const notification = await this.notificationsRepository.create({
+      userId,
+      type: payload.type || "GENERIC",
+      title: payload.title,
+      message: payload.message,
+      entityType: payload.entityType || null,
+      entityId: payload.entityId || null,
+      conversationId: payload.conversationId || null,
+      messageId: payload.messageId || null,
+      metadata: payload.metadata || null
+    });
+
+    const mappedNotification = mapNotification(notification);
+    emitToUser(userId, SOCKET_EVENTS.notification.new, {
+      notification: mappedNotification
+    });
+
+    return mappedNotification;
   }
 }

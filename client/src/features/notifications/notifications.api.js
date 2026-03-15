@@ -1,7 +1,7 @@
 import api from "../../api/axios";
 
 export function listMyNotifications(params = {}) {
-  return api.get("/notifications/me", { params });
+  return api.get("/notifications", { params });
 }
 
 export function markNotificationAsRead(id) {
@@ -9,5 +9,5 @@ export function markNotificationAsRead(id) {
 }
 
 export function markAllNotificationsAsRead() {
-  return api.patch("/notifications/me/read-all");
+  return api.patch("/notifications/read-all");
 }

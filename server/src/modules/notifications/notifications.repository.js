@@ -12,6 +12,15 @@ export default class NotificationsRepository extends BaseRepository {
     });
   }
 
+  countUnreadByUser(userId) {
+    return this.model.count({
+      where: {
+        userId,
+        isRead: false
+      }
+    });
+  }
+
   listByUser(userId, where, { skip, limit }) {
     return this.model.findMany({
       where: {
@@ -33,7 +42,8 @@ export default class NotificationsRepository extends BaseRepository {
         isRead: false
       },
       data: {
-        isRead: true
+        isRead: true,
+        readAt: new Date()
       }
     });
   }

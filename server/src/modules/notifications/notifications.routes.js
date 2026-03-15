@@ -7,11 +7,18 @@ import { listNotificationsQuerySchema } from "./notifications.validator.js";
 const router = Router();
 
 router.get(
+  "/",
+  authMiddleware,
+  validateRequest(listNotificationsQuerySchema, "query"),
+  notificationsController.listMyNotifications
+);
+router.get(
   "/me",
   authMiddleware,
   validateRequest(listNotificationsQuerySchema, "query"),
   notificationsController.listMyNotifications
 );
+router.patch("/read-all", authMiddleware, notificationsController.markAllAsRead);
 router.patch("/me/read-all", authMiddleware, notificationsController.markAllAsRead);
 router.patch("/:id/read", authMiddleware, notificationsController.markAsRead);
 

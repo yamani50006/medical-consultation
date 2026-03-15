@@ -1,0 +1,3 @@
+export const CHAT_PAGE_SIZE = 20;
+export const CHAT_MAX_ATTACHMENTS = 5;
+export const CHAT_MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;

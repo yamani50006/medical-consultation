@@ -6,7 +6,9 @@ import ProtectedRoute from "../layouts/ProtectedRoute";
 const AdminPendingDoctorsPage = lazy(() => import("../pages/AdminPendingDoctorsPage"));
 const AnalyticsSummaryPage = lazy(() => import("../pages/AnalyticsSummaryPage"));
 const AppointmentsPage = lazy(() => import("../pages/AppointmentsPage"));
+const ChatRoomPage = lazy(() => import("../pages/ChatRoomPage"));
 const ConsultationsPage = lazy(() => import("../pages/ConsultationsWorkspacePage"));
+const ConversationsPage = lazy(() => import("../pages/ConversationsPage"));
 const CreateGroupPage = lazy(() => import("../pages/CreateGroupPage"));
 const CreateTreatmentPlanPage = lazy(() => import("../pages/CreateTreatmentPlanPage"));
 const DoctorPostsPage = lazy(() => import("../pages/DoctorPostsPage"));
@@ -127,6 +129,18 @@ const router = createBrowserRouter([
           {
             path: "consultations",
             element: withSuspense(ConsultationsPage)
+          },
+          {
+            path: "conversations",
+            element: withSuspense(ConversationsPage)
+          },
+          {
+            path: "conversations/:id",
+            element: withSuspense(ChatRoomPage)
+          },
+          {
+            path: "notifications",
+            element: withSuspense(NotificationsPage)
           },
           {
             path: "appointments",

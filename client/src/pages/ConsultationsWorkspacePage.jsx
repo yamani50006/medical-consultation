@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { BrainCircuit, LoaderCircle, Sparkles, Wand2 } from "lucide-react";
 import { startTransition, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DoctorFiltersPanel from "../components/consultations/DoctorFiltersPanel";
 import DoctorRecommendationCard from "../components/consultations/DoctorRecommendationCard";
 import SymptomAnalyzerPanel from "../components/consultations/SymptomAnalyzerPanel";
@@ -24,6 +25,7 @@ import {
   respondConsultation,
   updateConsultationStatus
 } from "../features/consultations/consultations.api";
+import { createConversation } from "../features/chat/chat.api";
 import { getDoctorFilters, getRecommendedDoctors, listDoctors } from "../features/doctors/doctors.api";
 import { getMyPatientProfile } from "../features/patients/patients.api";
 import useAuth from "../hooks/useAuth";
@@ -82,6 +84,7 @@ function buildConsultationPayload(form, patientProfile, options = {}) {
 
 export default function ConsultationsWorkspacePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isPatient = user?.role === "PATIENT";
   const [consultations, setConsultations] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -103,6 +106,7 @@ export default function ConsultationsWorkspacePage() {
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [quickMatchLoading, setQuickMatchLoading] = useState(false);
+  const [openingConversationId, setOpeningConversationId] = useState("");
   const [form, setForm] = useState(createInitialPatientForm);
   const [responseDrafts, setResponseDrafts] = useState({});
 
@@ -270,6 +274,22 @@ export default function ConsultationsWorkspacePage() {
       await loadData();
     } catch (err) {
       setError(getErrorMessage(err, "تعذر تحديث الحالة."));
+    }
+  };
+
+  const handleOpenConversation = async (consultationId) => {
+    setError("");
+    setOpeningConversationId(consultationId);
+
+    try {
+      const response = await createConversation({
+        consultationId
+      });
+      navigate(`/conversations/${response.data.data.id}`);
+    } catch (err) {
+      setError(getErrorMessage(err, "تعذر فتح المحادثة."));
+    } finally {
+      setOpeningConversationId("");
     }
   };
 
@@ -465,7 +485,22 @@ export default function ConsultationsWorkspacePage() {
                         {isPatient ? `الطبيب: ${item.doctor?.user?.fullName}` : `المريض: ${item.patient?.user?.fullName}`}
                       </p>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(item.status)}>{formatStatus(item.status)}</Badge>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {(isPatient ? item.doctor?.user?.id : item.patient?.user?.id) ? (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => handleOpenConversation(item.id)}
+                          disabled={openingConversationId === item.id}
+                        >
+                          {openingConversationId === item.id ? (
+                            <LoaderCircle className="size-4 animate-spin" />
+                          ) : null}
+                          فتح المحادثة
+                        </Button>
+                      ) : null}
+                      <Badge variant={getStatusBadgeVariant(item.status)}>{formatStatus(item.status)}</Badge>
+                    </div>
                   </div>
 
                   <AnimatePresence mode="wait">

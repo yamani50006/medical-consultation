@@ -2,6 +2,7 @@ import { Router } from "express";
 import adminRoutes from "../modules/admin/admin.routes.js";
 import appointmentsRoutes from "../modules/appointments/appointments.routes.js";
 import authRoutes from "../modules/auth/auth.routes.js";
+import chatRoutes from "../modules/chat/chat.routes.js";
 import consultationsRoutes from "../modules/consultations/consultations.routes.js";
 import dashboardRoutes from "../modules/dashboard/dashboard.routes.js";
 import doctorsRoutes from "../modules/doctors/doctors.routes.js";
@@ -11,15 +12,18 @@ import medicalRecordsRoutes from "../modules/medical-records/medicalRecords.rout
 import medicationsRoutes from "../modules/medications/medications.routes.js";
 import notificationsRoutes from "../modules/notifications/notifications.routes.js";
 import patientsRoutes from "../modules/patients/patients.routes.js";
+import presenceRoutes from "../modules/presence/presence.routes.js";
 import postsRoutes from "../modules/posts/posts.routes.js";
 import reviewsRoutes from "../modules/reviews/reviews.routes.js";
 import symptomsRoutes from "../modules/symptoms/symptoms.routes.js";
 import treatmentPlansRoutes from "../modules/treatment-plans/treatmentPlans.routes.js";
+import uploadsRoutes from "../modules/uploads/uploads.routes.js";
 import usersRoutes from "../modules/users/users.routes.js";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
+router.use("/", chatRoutes);
 router.use("/users", usersRoutes);
 router.use("/doctors", doctorsRoutes);
 router.use("/patients", patientsRoutes);
@@ -33,6 +37,8 @@ router.use("/medical-records", medicalRecordsRoutes);
 router.use("/reviews", reviewsRoutes);
 router.use("/symptoms", symptomsRoutes);
 router.use("/notifications", notificationsRoutes);
+router.use("/presence", presenceRoutes);
+router.use("/uploads", uploadsRoutes);
 router.use("/groups", groupsRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/admin", adminRoutes);

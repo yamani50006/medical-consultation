@@ -2,6 +2,8 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LogOut, Menu, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
+import { useConversationStore } from "../../features/chat/conversation.store";
+import { useNotificationStore } from "../../features/notifications/notifications.store";
 import useAuth from "../../hooks/useAuth";
 import { formatRole } from "../../utils/status";
 import { cn } from "../../utils/cn";
@@ -13,6 +15,8 @@ import UserMenu from "./UserMenu";
 
 export default function AppHeader() {
   const { user, isAuthenticated, logout } = useAuth();
+  const unreadConversations = useConversationStore((state) => state.meta.unreadCount || 0);
+  const unreadNotifications = useNotificationStore((state) => state.meta.unreadCount || 0);
   const location = useLocation();
   const reduceMotion = useReducedMotion();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -54,8 +58,19 @@ export default function AppHeader() {
         { to: "/groups", label: "المجموعات", show: isAuthenticated && user?.role !== "ADMIN" },
         { to: "/doctor-posts", label: "استوديو الطبيب", show: user?.role === "DOCTOR" },
         { to: "/consultations", label: "الاستشارات", show: isAuthenticated && user?.role !== "ADMIN" },
+        {
+          to: "/conversations",
+          label: "المحادثات",
+          badgeCount: unreadConversations,
+          show: isAuthenticated && user?.role !== "ADMIN"
+        },
         { to: "/appointments", label: "المواعيد", show: isAuthenticated && user?.role !== "ADMIN" },
-        { to: "/patient/notifications", label: "الإشعارات", show: user?.role === "PATIENT" },
+        {
+          to: "/notifications",
+          label: "الإشعارات",
+          badgeCount: unreadNotifications,
+          show: isAuthenticated && user?.role !== "ADMIN"
+        },
         {
           to: user?.role === "PATIENT" ? "/patient/reviews" : "/doctor/reviews",
           label: "التقييمات",
@@ -64,7 +79,7 @@ export default function AppHeader() {
         { to: "/admin/analytics", label: "التحليلات", show: user?.role === "ADMIN" },
         { to: "/admin/pending-doctors", label: "الإدارة", show: user?.role === "ADMIN" }
       ].filter((item) => item.show),
-    [isAuthenticated, user?.role]
+    [isAuthenticated, unreadConversations, unreadNotifications, user?.role]
   );
 
   return (
@@ -123,7 +138,7 @@ export default function AppHeader() {
                     )
                   }
                 >
-                  {item.label}
+                  <NavLabel label={item.label} badgeCount={item.badgeCount} />
                 </NavLink>
               ))}
             </nav>
@@ -172,7 +187,7 @@ export default function AppHeader() {
                         )
                       }
                     >
-                      <span>{item.label}</span>
+                      <NavLabel label={item.label} badgeCount={item.badgeCount} />
                     </NavLink>
                   ))}
                 </nav>
@@ -198,6 +213,19 @@ export default function AppHeader() {
         </div>
       </div>
     </motion.header>
+  );
+}
+
+function NavLabel({ label, badgeCount = 0 }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span>{label}</span>
+      {badgeCount ? (
+        <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-bold text-primary">
+          {badgeCount}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
