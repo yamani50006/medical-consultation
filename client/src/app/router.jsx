@@ -6,7 +6,7 @@ import ProtectedRoute from "../layouts/ProtectedRoute";
 const AdminPendingDoctorsPage = lazy(() => import("../pages/AdminPendingDoctorsPage"));
 const AnalyticsSummaryPage = lazy(() => import("../pages/AnalyticsSummaryPage"));
 const AppointmentsPage = lazy(() => import("../pages/AppointmentsPage"));
-const ConsultationsPage = lazy(() => import("../pages/ConsultationsPage"));
+const ConsultationsPage = lazy(() => import("../pages/ConsultationsWorkspacePage"));
 const CreateGroupPage = lazy(() => import("../pages/CreateGroupPage"));
 const CreateTreatmentPlanPage = lazy(() => import("../pages/CreateTreatmentPlanPage"));
 const DoctorPostsPage = lazy(() => import("../pages/DoctorPostsPage"));
@@ -21,6 +21,7 @@ const MedicalRecordPage = lazy(() => import("../pages/MedicalRecordPage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 const NotificationsPage = lazy(() => import("../pages/NotificationsPage"));
 const PostsPage = lazy(() => import("../pages/PostsPage"));
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const RegisterDoctorPage = lazy(() => import("../pages/RegisterDoctorPage"));
 const RegisterPatientPage = lazy(() => import("../pages/RegisterPatientPage"));
 const ReviewsPage = lazy(() => import("../pages/ReviewsPage"));
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
           {
             path: "dashboard",
             element: withSuspense(RoleDashboardPage)
+          },
+          {
+            path: "profile",
+            element: withSuspense(ProfilePage)
           }
         ]
       },

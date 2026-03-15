@@ -16,6 +16,12 @@ export function AuthProvider({ children }) {
   const [token, setTokenState] = useState(getToken());
   const [isLoading, setIsLoading] = useState(Boolean(getToken()));
 
+  const syncUser = (nextUser) => {
+    setStoredUser(nextUser);
+    setUser(nextUser);
+    return nextUser;
+  };
+
   useEffect(() => {
     if (!token) {
       setIsLoading(false);
@@ -25,8 +31,7 @@ export function AuthProvider({ children }) {
     (async () => {
       try {
         const response = await getMe();
-        setUser(response.data.data);
-        setStoredUser(response.data.data);
+        syncUser(response.data.data);
       } catch (error) {
         clearToken();
         clearStoredUser();
@@ -42,9 +47,8 @@ export function AuthProvider({ children }) {
     const response = await loginRequest(payload);
     const result = response.data.data;
     setToken(result.token);
-    setStoredUser(result.user);
     setTokenState(result.token);
-    setUser(result.user);
+    syncUser(result.user);
     return result.user;
   };
 
@@ -55,6 +59,11 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const refreshUser = async () => {
+    const response = await getMe();
+    return syncUser(response.data.data);
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -62,6 +71,8 @@ export function AuthProvider({ children }) {
       isLoading,
       isAuthenticated: Boolean(token),
       login,
+      refreshUser,
+      setCurrentUser: syncUser,
       logout
     }),
     [user, token, isLoading]

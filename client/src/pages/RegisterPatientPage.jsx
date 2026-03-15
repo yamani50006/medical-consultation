@@ -22,6 +22,8 @@ export default function RegisterPatientPage() {
     password: "",
     gender: "male",
     dateOfBirth: "",
+    city: "",
+    region: "",
     bloodType: "",
     chronicDiseases: "",
     currentMedications: ""
@@ -99,6 +101,8 @@ export default function RegisterPatientPage() {
                 onChange={handleChange}
                 required
               />
+              <Input label="المدينة" name="city" value={form.city} onChange={handleChange} />
+              <Input label="المنطقة" name="region" value={form.region} onChange={handleChange} />
               <Input label="فصيلة الدم" name="bloodType" value={form.bloodType} onChange={handleChange} />
               <Input
                 label="الأمراض المزمنة"

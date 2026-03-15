@@ -18,6 +18,13 @@ export default class UsersRepository extends BaseRepository {
     });
   }
 
+  findByEmail(email) {
+    return this.model.findUnique({
+      where: { email },
+      select: { id: true }
+    });
+  }
+
   listUsers(where, { skip, limit }) {
     return this.model.findMany({
       where,
@@ -53,6 +60,18 @@ export default class UsersRepository extends BaseRepository {
     return prisma.doctorProfile.findUnique({
       where: { id },
       include: safeDoctorInclude
+    });
+  }
+
+  updateSafeById(id, data) {
+    return this.model.update({
+      where: { id },
+      data,
+      select: {
+        ...safeUserSelect,
+        patientProfile: true,
+        doctorProfile: true
+      }
     });
   }
 

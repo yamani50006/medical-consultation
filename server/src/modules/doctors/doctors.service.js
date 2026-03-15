@@ -1,6 +1,6 @@
 import BaseService from "../../core/base/BaseService.js";
 import AppError from "../../core/errors/AppError.js";
-import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import DoctorRecommendationService from "../recommendations/doctorRecommendation.service.js";
 import ReviewsRepository from "../reviews/reviews.repository.js";
 import DoctorsRepository from "./doctors.repository.js";
 
@@ -9,49 +9,19 @@ export default class DoctorsService extends BaseService {
     super();
     this.doctorsRepository = new DoctorsRepository();
     this.reviewsRepository = new ReviewsRepository();
+    this.doctorRecommendationService = new DoctorRecommendationService();
   }
 
   async listDoctors(query) {
-    const { page, limit, skip } = this.getPagination(query);
-    const where = {
-      approvalStatus: "APPROVED",
-      user: { status: "ACTIVE" }
-    };
+    return this.doctorRecommendationService.searchDoctors(query);
+  }
 
-    if (query.specialization) {
-      where.specialization = { contains: query.specialization, mode: "insensitive" };
-    }
+  async getRecommendedDoctors(userId, query) {
+    return this.doctorRecommendationService.recommendDoctors(query, userId);
+  }
 
-    if (query.search) {
-      where.OR = [
-        { specialization: { contains: query.search, mode: "insensitive" } },
-        { bio: { contains: query.search, mode: "insensitive" } },
-        {
-          user: {
-            fullName: { contains: query.search, mode: "insensitive" }
-          }
-        }
-      ];
-    }
-
-    const [items, total] = await Promise.all([
-      this.doctorsRepository.listApprovedDoctors(where, { skip, limit }),
-      this.doctorsRepository.count(where)
-    ]);
-    const ratingSummaryMap = await this.reviewsRepository.getDoctorRatingSummaryMap(
-      items.map((item) => item.id)
-    );
-
-    return {
-      items: items.map((item) => ({
-        ...item,
-        ratingSummary: ratingSummaryMap[item.id] || {
-          averageRating: 0,
-          totalReviews: 0
-        }
-      })),
-      meta: buildPaginationMeta({ page, limit, total })
-    };
+  async getDoctorFilters() {
+    return this.doctorRecommendationService.getFilterOptions();
   }
 
   async getDoctorById(id) {
@@ -89,10 +59,24 @@ export default class DoctorsService extends BaseService {
       throw new AppError("License number cannot be changed", 400, "LICENSE_IMMUTABLE");
     }
 
+    const supportsOnline = payload.supportsOnline ?? doctor.supportsOnline;
+    const supportsInPerson = payload.supportsInPerson ?? doctor.supportsInPerson;
+
+    if (!supportsOnline && !supportsInPerson) {
+      throw new AppError("At least one consultation mode must be enabled", 400, "CONSULTATION_MODE_REQUIRED");
+    }
+
     return this.doctorsRepository.updateByUserId(userId, {
       specialization: payload.specialization ?? doctor.specialization,
+      city: payload.city !== undefined ? payload.city : doctor.city,
+      region: payload.region !== undefined ? payload.region : doctor.region,
       yearsOfExperience: payload.yearsOfExperience ?? doctor.yearsOfExperience,
-      bio: payload.bio ?? doctor.bio
+      bio: payload.bio ?? doctor.bio,
+      consultationFee:
+        payload.consultationFee !== undefined ? payload.consultationFee : doctor.consultationFee,
+      supportsOnline,
+      supportsInPerson,
+      isAvailableNow: payload.isAvailableNow ?? doctor.isAvailableNow
     });
   }
 }

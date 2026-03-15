@@ -4,6 +4,8 @@ import { roleMiddleware } from "../../core/middlewares/roleMiddleware.js";
 import consultationsController from "./consultations.controller.js";
 import {
   createConsultationSchema,
+  quickMatchConsultationSchema,
+  requestConsultationSchema,
   listConsultationsQuerySchema,
   respondConsultationSchema,
   updateConsultationStatusSchema,
@@ -18,6 +20,20 @@ router.post(
   roleMiddleware("PATIENT"),
   validate(createConsultationSchema),
   consultationsController.createConsultation
+);
+router.post(
+  "/request",
+  authMiddleware,
+  roleMiddleware("PATIENT"),
+  validate(requestConsultationSchema),
+  consultationsController.requestConsultation
+);
+router.post(
+  "/quick-match",
+  authMiddleware,
+  roleMiddleware("PATIENT"),
+  validate(quickMatchConsultationSchema),
+  consultationsController.quickMatchConsultation
 );
 router.get(
   "/my",

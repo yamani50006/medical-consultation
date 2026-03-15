@@ -4,6 +4,14 @@ export function createConsultation(payload) {
   return api.post("/consultations", payload);
 }
 
+export function requestConsultation(payload) {
+  return api.post("/consultations/request", payload);
+}
+
+export function quickMatchConsultation(payload) {
+  return api.post("/consultations/quick-match", payload);
+}
+
 export function listMyConsultations(params = {}) {
   return api.get("/consultations/my", { params });
 }

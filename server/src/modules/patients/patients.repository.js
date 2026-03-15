@@ -1,5 +1,6 @@
 import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
+import { safeUserSelect } from "../users/users.select.js";
 
 export default class PatientsRepository extends BaseRepository {
   constructor() {
@@ -11,15 +12,7 @@ export default class PatientsRepository extends BaseRepository {
       where: { userId },
       include: {
         user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: safeUserSelect
         }
       }
     });
@@ -31,15 +24,7 @@ export default class PatientsRepository extends BaseRepository {
       data,
       include: {
         user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true
-          }
+          select: safeUserSelect
         }
       }
     });

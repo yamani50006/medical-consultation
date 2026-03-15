@@ -19,6 +19,30 @@ class DoctorsController {
     }
   };
 
+  listRecommendedDoctors = async (req, res, next) => {
+    try {
+      const result = await this.doctorsService.getRecommendedDoctors(req.user.userId, req.query);
+      return ApiResponse.success(res, {
+        message: "Recommended doctors fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getDoctorFilters = async (req, res, next) => {
+    try {
+      const result = await this.doctorsService.getDoctorFilters();
+      return ApiResponse.success(res, {
+        message: "Doctor filters fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getDoctorById = async (req, res, next) => {
     try {
       const result = await this.doctorsService.getDoctorById(req.params.id);

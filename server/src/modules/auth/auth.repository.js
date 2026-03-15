@@ -1,15 +1,6 @@
 import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
-
-const safeUserSelect = {
-  id: true,
-  fullName: true,
-  email: true,
-  role: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true
-};
+import { safeUserSelect } from "../users/users.select.js";
 
 export default class AuthRepository extends BaseRepository {
   constructor() {

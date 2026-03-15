@@ -25,6 +25,8 @@ export default class PatientsService extends BaseService {
     return this.patientsRepository.updateByUserId(userId, {
       gender: payload.gender ?? patient.gender,
       dateOfBirth: payload.dateOfBirth ?? patient.dateOfBirth,
+      city: payload.city !== undefined ? payload.city : patient.city,
+      region: payload.region !== undefined ? payload.region : patient.region,
       bloodType: payload.bloodType ?? patient.bloodType,
       chronicDiseases: payload.chronicDiseases ?? patient.chronicDiseases,
       currentMedications: payload.currentMedications ?? patient.currentMedications

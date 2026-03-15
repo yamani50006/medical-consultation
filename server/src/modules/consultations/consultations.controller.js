@@ -19,6 +19,32 @@ class ConsultationsController {
     }
   };
 
+  requestConsultation = async (req, res, next) => {
+    try {
+      const result = await this.consultationsService.requestConsultation(req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        statusCode: 201,
+        message: "Consultation request created successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  quickMatchConsultation = async (req, res, next) => {
+    try {
+      const result = await this.consultationsService.quickMatchConsultation(req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        statusCode: 201,
+        message: "Quick consultation match created successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   listMyConsultations = async (req, res, next) => {
     try {
       const result = await this.consultationsService.listMyConsultations(req.user.userId, req.query);

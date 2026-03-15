@@ -3,6 +3,7 @@ const translations = {
   "Invalid credentials": "بيانات الدخول غير صحيحة.",
   "Login failed": "فشل تسجيل الدخول.",
   "Registration failed": "فشل إنشاء الحساب.",
+  "Validation failed": "البيانات المدخلة غير صالحة.",
   "Email is already registered": "البريد الإلكتروني مستخدم بالفعل.",
   "Doctor account is not approved yet": "حساب الطبيب لم تتم الموافقة عليه بعد.",
   "Your account is pending approval": "حسابك ما زال بانتظار الموافقة.",
@@ -41,6 +42,7 @@ const translations = {
   "Failed to load analytics.": "تعذر تحميل التحليلات.",
   "Doctor profile not found": "تعذر العثور على ملف الطبيب.",
   "Patient profile not found": "تعذر العثور على ملف المريض.",
+  "User not found": "تعذر العثور على المستخدم.",
   "Patient account is not active": "حساب المريض غير نشط.",
   "Consultation not found": "تعذر العثور على الاستشارة.",
   "Consultation does not belong to this doctor and patient": "هذه الاستشارة لا تخص هذا الطبيب وهذا المريض.",
@@ -65,8 +67,19 @@ const translations = {
   "At least one medication field is required": "يجب إدخال حقل واحد على الأقل للدواء.",
   "At least one group field is required": "يجب إدخال حقل واحد على الأقل للمجموعة.",
   "At least one post field is required": "يجب إدخال حقل واحد على الأقل للمنشور.",
+  "At least one account field is required": "يجب تعديل حقل واحد على الأقل في الحساب.",
   "Provide exactly one completed consultation or appointment": "يجب تحديد استشارة مكتملة واحدة أو موعد مكتمل واحد فقط.",
-  "Notification not found": "تعذر العثور على الإشعار."
+  "Notification not found": "تعذر العثور على الإشعار.",
+  "At least one consultation mode must be enabled": "يجب تفعيل نوع استشارة واحد على الأقل.",
+  "Choose a doctor or let the platform choose the best doctor": "اختر طبيبًا أو دع المنصة تختار الطبيب الأنسب.",
+  "No suitable doctors found": "لم يتم العثور على أطباء مناسبين حسب المعايير المحددة.",
+  "No available doctors found right now": "لا يوجد أطباء متاحون الآن وفق الشروط الحالية.",
+  "Doctor is not available for consultations": "الطبيب المحدد غير متاح للاستشارة بهذه المعايير.",
+  "Doctor not found": "تعذر العثور على الطبيب.",
+  "License number cannot be changed": "لا يمكن تعديل رقم الترخيص بعد التسجيل.",
+  "Invalid consultation status": "حالة الاستشارة غير صالحة.",
+  "You can only respond to assigned consultations": "يمكن للطبيب الرد على الاستشارات المسندة إليه فقط.",
+  "You can only update assigned consultations": "يمكن للطبيب تحديث حالة الاستشارات المسندة إليه فقط."
 };
 
 export function getErrorMessage(error, fallback = "حدث خطأ غير متوقع.") {

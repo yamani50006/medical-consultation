@@ -29,6 +29,8 @@ export default class AuthService extends BaseService {
       {
         gender: payload.gender,
         dateOfBirth: payload.dateOfBirth,
+        city: payload.city || null,
+        region: payload.region || null,
         bloodType: payload.bloodType || null,
         chronicDiseases: payload.chronicDiseases || null,
         currentMedications: payload.currentMedications || null
@@ -62,9 +64,15 @@ export default class AuthService extends BaseService {
       },
       {
         specialization: payload.specialization,
+        city: payload.city || null,
+        region: payload.region || null,
         yearsOfExperience: payload.yearsOfExperience,
         bio: payload.bio,
         licenseNumber: payload.licenseNumber,
+        consultationFee: payload.consultationFee ?? null,
+        supportsOnline: payload.supportsOnline ?? true,
+        supportsInPerson: payload.supportsInPerson ?? true,
+        isAvailableNow: payload.isAvailableNow ?? false,
         isVerified: false,
         approvalStatus: "PENDING"
       }
@@ -106,6 +114,7 @@ export default class AuthService extends BaseService {
       id: user.id,
       fullName: user.fullName,
       email: user.email,
+      profileImageUrl: user.profileImageUrl,
       role: user.role,
       status: user.status,
       createdAt: user.createdAt,

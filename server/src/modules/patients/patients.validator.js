@@ -1,9 +1,25 @@
 import { z } from "zod";
 import AppError from "../../core/errors/AppError.js";
 
+const nullableTrimmedStringSchema = (minimum, maximum) =>
+  z.preprocess((value) => {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    if (typeof value === "string") {
+      const normalizedValue = value.trim();
+      return normalizedValue === "" ? null : normalizedValue;
+    }
+
+    return value;
+  }, z.string().min(minimum).max(maximum).nullable().optional());
+
 export const updatePatientProfileSchema = z.object({
   gender: z.enum(["male", "female", "other"]).optional(),
   dateOfBirth: z.coerce.date().optional(),
+  city: nullableTrimmedStringSchema(2, 120),
+  region: nullableTrimmedStringSchema(2, 120),
   bloodType: z.string().max(10).optional(),
   chronicDiseases: z.string().max(500).optional(),
   currentMedications: z.string().max(500).optional()

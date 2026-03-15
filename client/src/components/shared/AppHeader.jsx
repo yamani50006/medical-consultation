@@ -7,6 +7,7 @@ import { formatRole } from "../../utils/status";
 import { cn } from "../../utils/cn";
 import Button from "../ui/Button";
 import LogoMark from "./LogoMark";
+import ProfileAvatar from "./ProfileAvatar";
 import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
 
@@ -43,6 +44,7 @@ export default function AppHeader() {
     () =>
       [
         { to: "/posts", label: "المنشورات", show: true },
+        { to: "/profile", label: "الملف الشخصي", show: isAuthenticated },
         { to: "/dashboard", label: "لوحة التحكم", show: isAuthenticated },
         {
           to: user?.role === "PATIENT" ? "/patient/treatment-plans" : "/doctor/treatment-plans",
@@ -138,11 +140,21 @@ export default function AppHeader() {
               >
                 {isAuthenticated ? (
                   <div className="mb-4 rounded-[24px] border border-border/60 bg-secondary/45 p-4">
-                    <p className="truncate text-sm font-semibold ">{user?.fullName}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">{user?.email}</p>
-                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
-                      {formatRole(user?.role)}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <ProfileAvatar
+                        src={user?.profileImageUrl}
+                        name={user?.fullName}
+                        className="size-12"
+                        fallbackClassName="font-semibold"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold ">{user?.fullName}</p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{user?.email}</p>
+                        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+                          {formatRole(user?.role)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ) : null}
 

@@ -13,6 +13,7 @@ import notificationsRoutes from "../modules/notifications/notifications.routes.j
 import patientsRoutes from "../modules/patients/patients.routes.js";
 import postsRoutes from "../modules/posts/posts.routes.js";
 import reviewsRoutes from "../modules/reviews/reviews.routes.js";
+import symptomsRoutes from "../modules/symptoms/symptoms.routes.js";
 import treatmentPlansRoutes from "../modules/treatment-plans/treatmentPlans.routes.js";
 import usersRoutes from "../modules/users/users.routes.js";
 
@@ -30,6 +31,7 @@ router.use("/medications", medicationsRoutes);
 router.use("/follow-ups", followUpsRoutes);
 router.use("/medical-records", medicalRecordsRoutes);
 router.use("/reviews", reviewsRoutes);
+router.use("/symptoms", symptomsRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/groups", groupsRoutes);
 router.use("/dashboard", dashboardRoutes);

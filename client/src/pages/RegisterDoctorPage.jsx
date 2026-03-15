@@ -9,6 +9,7 @@ import Button from "../components/ui/Button";
 import { Card, CardContent } from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Textarea from "../components/ui/Textarea";
+import ToggleField from "../components/ui/ToggleField";
 
 export default function RegisterDoctorPage() {
   const navigate = useNavigate();
@@ -20,13 +21,23 @@ export default function RegisterDoctorPage() {
     email: "",
     password: "",
     specialization: "",
+    city: "",
+    region: "",
     yearsOfExperience: "",
     bio: "",
-    licenseNumber: ""
+    licenseNumber: "",
+    consultationFee: "",
+    supportsOnline: true,
+    supportsInPerson: true,
+    isAvailableNow: false
   });
 
   const handleChange = (event) => {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
+  };
+
+  const handleToggle = (name, checked) => {
+    setForm((prev) => ({ ...prev, [name]: checked }));
   };
 
   const handleSubmit = async (event) => {
@@ -37,7 +48,8 @@ export default function RegisterDoctorPage() {
     try {
       await registerDoctor({
         ...form,
-        yearsOfExperience: Number(form.yearsOfExperience)
+        yearsOfExperience: Number(form.yearsOfExperience),
+        consultationFee: form.consultationFee === "" ? undefined : Number(form.consultationFee)
       });
       setSuccessMessage("تم إنشاء حساب الطبيب. انتظر موافقة الإدارة قبل تسجيل الدخول.");
       setTimeout(() => navigate("/login"), 1200);
@@ -107,6 +119,8 @@ export default function RegisterDoctorPage() {
                 onChange={handleChange}
                 required
               />
+              <Input label="المدينة" name="city" value={form.city} onChange={handleChange} />
+              <Input label="المنطقة" name="region" value={form.region} onChange={handleChange} />
               <Input
                 label="رقم الترخيص"
                 name="licenseNumber"
@@ -114,8 +128,38 @@ export default function RegisterDoctorPage() {
                 onChange={handleChange}
                 required
               />
+              <Input
+                label="سعر الاستشارة"
+                name="consultationFee"
+                type="number"
+                min="0"
+                value={form.consultationFee}
+                onChange={handleChange}
+                placeholder="اختياري"
+              />
               <div className="md:col-span-2">
                 <Textarea label="نبذة تعريفية" name="bio" value={form.bio} onChange={handleChange} required />
+              </div>
+              <div className="md:col-span-2 grid gap-3 lg:grid-cols-2">
+                <ToggleField
+                  label="استشارات أونلاين"
+                  description="تفعيل استقبال الاستشارات عبر المنصة"
+                  checked={form.supportsOnline}
+                  onChange={(event) => handleToggle("supportsOnline", event.target.checked)}
+                />
+                <ToggleField
+                  label="استشارات حضورية"
+                  description="تفعيل الاستشارات أو الزيارات الحضورية"
+                  checked={form.supportsInPerson}
+                  onChange={(event) => handleToggle("supportsInPerson", event.target.checked)}
+                />
+                <ToggleField
+                  label="متاح الآن"
+                  description="إظهار الطبيب ضمن نتائج أسرع استشارة"
+                  checked={form.isAvailableNow}
+                  onChange={(event) => handleToggle("isAvailableNow", event.target.checked)}
+                  className="lg:col-span-2"
+                />
               </div>
               <div className="md:col-span-2 space-y-4">
                 <FormError message={error} />

@@ -17,6 +17,31 @@ export default class UsersService extends BaseService {
     return user;
   }
 
+  async updateCurrentUser(userId, payload) {
+    const user = await this.usersRepository.findSafeById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
+    }
+
+    if (payload.email && payload.email !== user.email) {
+      const existingUser = await this.usersRepository.findByEmail(payload.email);
+      if (existingUser && existingUser.id !== userId) {
+        throw new AppError("Email is already registered", 409, "EMAIL_EXISTS");
+      }
+    }
+
+    const nextData = {
+      fullName: payload.fullName ?? user.fullName,
+      email: payload.email ?? user.email
+    };
+
+    if (Object.prototype.hasOwnProperty.call(payload, "profileImageUrl")) {
+      nextData.profileImageUrl = payload.profileImageUrl;
+    }
+
+    return this.usersRepository.updateSafeById(userId, nextData);
+  }
+
   async listUsers(query) {
     const { page, limit, skip } = this.getPagination(query);
     const where = {};

@@ -1,6 +1,31 @@
 import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
 
+const consultationInclude = {
+  patient: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true
+        }
+      }
+    }
+  },
+  doctor: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true
+        }
+      }
+    }
+  }
+};
+
 export default class ConsultationsRepository extends BaseRepository {
   constructor() {
     super(prisma.consultation);
@@ -48,19 +73,7 @@ export default class ConsultationsRepository extends BaseRepository {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: {
-        doctor: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
+      include: consultationInclude
     });
   }
 
@@ -73,49 +86,21 @@ export default class ConsultationsRepository extends BaseRepository {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
+      include: consultationInclude
     });
   }
 
   findByIdWithRelations(id) {
     return this.model.findUnique({
       where: { id },
-      include: {
-        patient: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
-            }
-          }
-        },
-        doctor: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
-            }
-          }
-        }
-      }
+      include: consultationInclude
+    });
+  }
+
+  createWithRelations(data) {
+    return this.model.create({
+      data,
+      include: consultationInclude
     });
   }
 }

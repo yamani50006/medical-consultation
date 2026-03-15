@@ -17,6 +17,18 @@ class UsersController {
       return next(error);
     }
   };
+
+  updateMe = async (req, res, next) => {
+    try {
+      const user = await this.usersService.updateCurrentUser(req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        message: "User updated successfully",
+        data: user
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
 
 export default new UsersController();
