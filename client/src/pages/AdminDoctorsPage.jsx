@@ -125,8 +125,8 @@ export default function AdminDoctorsPage() {
             onWarn={(doctor) => setDialogState({ type: "warning", doctor })}
           />
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-white/40 bg-white/75 px-4 py-3 text-sm">
-            <div className="text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[26px] border border-white/45 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(242,249,250,0.9))] px-4 py-3 text-sm shadow-[0_18px_60px_-50px_rgba(15,23,42,0.3)]">
+            <div className="text-slate-500">
               الصفحة {formatMetric(meta?.page || 1)} من {formatMetric(meta?.totalPages || 1)} • إجمالي النتائج {formatMetric(meta?.total || 0)}
             </div>
             <div className="flex gap-2">
