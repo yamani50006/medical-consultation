@@ -1,0 +1,462 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       String                    @id @default(cuid())
+  fullName                 String
+  email                    String                    @unique
+  password                 String
+  role                     Role
+  status                   UserStatus                @default(ACTIVE)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  profileImageUrl          String?
+  conversationParticipants ConversationParticipant[]
+  doctorProfile            DoctorProfile?
+  messages                 Message[]
+  notifications            Notification[]
+  patientProfile           PatientProfile?
+  presence                 UserPresence?
+}
+
+model PatientProfile {
+  id                 String            @id @default(cuid())
+  userId             String            @unique
+  gender             String
+  dateOfBirth        DateTime
+  bloodType          String?
+  chronicDiseases    String?
+  currentMedications String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  city               String?
+  region             String?
+  appointments       Appointment[]
+  consultations      Consultation[]
+  conversations      Conversation[]
+  followUps          FollowUpEntry[]
+  groupMemberships   GroupMembership[]
+  medicalRecord      MedicalRecord?
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviews            Review[]
+  treatmentPlans     TreatmentPlan[]
+}
+
+model DoctorProfile {
+  id                String          @id @default(cuid())
+  userId            String          @unique
+  specialization    String
+  yearsOfExperience Int
+  bio               String
+  licenseNumber     String          @unique
+  isVerified        Boolean         @default(false)
+  approvalStatus    ApprovalStatus  @default(PENDING)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  city              String?
+  consultationFee   Int?
+  isAvailableNow    Boolean         @default(false)
+  region            String?
+  supportsInPerson  Boolean         @default(true)
+  supportsOnline    Boolean         @default(true)
+  appointments      Appointment[]
+  consultations     Consultation[]
+  conversations     Conversation[]
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groups            Group[]
+  groupPosts        GroupPost[]
+  posts             Post[]
+  reviews           Review[]
+  treatmentPlans    TreatmentPlan[]
+}
+
+model Post {
+  id             String        @id @default(cuid())
+  doctorId       String
+  title          String
+  content        String
+  specialization String
+  status         PostStatus    @default(PUBLISHED)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  doctor         DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId])
+  @@index([specialization])
+}
+
+model Consultation {
+  id             String             @id @default(cuid())
+  patientId      String
+  doctorId       String
+  subject        String
+  description    String
+  doctorResponse String?
+  status         ConsultationStatus @default(PENDING)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  doctor         DoctorProfile      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient        PatientProfile     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  conversation   Conversation?
+  reviews        Review[]
+  treatmentPlans TreatmentPlan[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+}
+
+model Conversation {
+  id                  String                    @id @default(cuid())
+  consultationId      String                    @unique
+  patientId           String
+  doctorId            String
+  lastMessageAt       DateTime?
+  lastMessagePreview  String?
+  lastMessageType     MessageType?
+  lastMessageStatus   MessageStatus?
+  lastMessageSenderId String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  consultation        Consultation              @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  doctor              DoctorProfile             @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient             PatientProfile            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  participants        ConversationParticipant[]
+  messages            Message[]
+  notifications       Notification[]
+
+  @@index([patientId, lastMessageAt])
+  @@index([doctorId, lastMessageAt])
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  userId         String
+  role           Role
+  unreadCount    Int          @default(0)
+  lastReadAt     DateTime?
+  joinedAt       DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId, unreadCount])
+  @@index([userId, updatedAt])
+}
+
+model Message {
+  id             String              @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String?
+  type           MessageType         @default(TEXT)
+  status         MessageStatus       @default(SENT)
+  deliveredAt    DateTime?
+  seenAt         DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User                @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  attachments    MessageAttachment[]
+  notifications  Notification[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+  @@index([status, createdAt])
+}
+
+model MessageAttachment {
+  id            String   @id @default(cuid())
+  messageId     String
+  storageKey    String   @unique
+  originalName  String
+  mimeType      String
+  sizeBytes     Int
+  fileExtension String?
+  createdAt     DateTime @default(now())
+  message       Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  patientId       String
+  doctorId        String
+  appointmentDate DateTime
+  notes           String?
+  status          AppointmentStatus @default(SCHEDULED)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  doctor          DoctorProfile     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient         PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  reviews         Review[]
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([appointmentDate])
+}
+
+model TreatmentPlan {
+  id               String              @id @default(cuid())
+  patientId        String
+  doctorId         String
+  consultationId   String?
+  title            String
+  diagnosisSummary String
+  instructions     String
+  startDate        DateTime
+  endDate          DateTime
+  status           TreatmentPlanStatus @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  followUps        FollowUpEntry[]
+  medications      Medication[]
+  consultation     Consultation?       @relation(fields: [consultationId], references: [id])
+  doctor           DoctorProfile       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient          PatientProfile      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([consultationId])
+  @@index([status])
+}
+
+model Medication {
+  id              String        @id @default(cuid())
+  treatmentPlanId String
+  medicationName  String
+  dosage          String
+  frequency       String
+  durationInDays  Int
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  treatmentPlan   TreatmentPlan @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+
+  @@index([treatmentPlanId])
+}
+
+model FollowUpEntry {
+  id              String         @id @default(cuid())
+  treatmentPlanId String
+  patientId       String
+  symptomsStatus  String
+  painLevel       Int?
+  sideEffects     String?
+  notes           String?
+  doctorNote      String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  patient         PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentPlan   TreatmentPlan  @relation(fields: [treatmentPlanId], references: [id], onDelete: Cascade)
+
+  @@index([treatmentPlanId])
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+model MedicalRecord {
+  id               String         @id @default(cuid())
+  patientId        String         @unique
+  allergies        String?
+  chronicDiseases  String?
+  surgeriesHistory String?
+  familyHistory    String?
+  lifestyleNotes   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  patient          PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id             String         @id @default(cuid())
+  patientId      String
+  doctorId       String
+  consultationId String?
+  appointmentId  String?
+  rating         Int
+  comment        String?
+  createdAt      DateTime       @default(now())
+  appointment    Appointment?   @relation(fields: [appointmentId], references: [id])
+  consultation   Consultation?  @relation(fields: [consultationId], references: [id])
+  doctor         DoctorProfile  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient        PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, consultationId])
+  @@unique([patientId, appointmentId])
+  @@index([doctorId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id             String           @id @default(cuid())
+  userId         String
+  type           NotificationType @default(GENERIC)
+  title          String
+  message        String
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  conversationId String?
+  entityId       String?
+  entityType     String?
+  messageId      String?
+  metadata       Json?
+  readAt         DateTime?
+  updatedAt      DateTime         @default(now()) @updatedAt
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id])
+  relatedMessage Message?         @relation(fields: [messageId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@index([conversationId, createdAt])
+  @@index([messageId, createdAt])
+}
+
+model UserPresence {
+  id           String         @id @default(cuid())
+  userId       String         @unique
+  status       PresenceStatus @default(OFFLINE)
+  socketCount  Int            @default(0)
+  lastSeenAt   DateTime?
+  lastActiveAt DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, lastActiveAt])
+}
+
+model Group {
+  id                String            @id @default(cuid())
+  name              String
+  description       String
+  category          String
+  visibility        GroupVisibility   @default(PUBLIC)
+  createdByDoctorId String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  createdByDoctor   DoctorProfile     @relation(fields: [createdByDoctorId], references: [id], onDelete: Cascade)
+  memberships       GroupMembership[]
+  posts             GroupPost[]
+
+  @@index([createdByDoctorId])
+  @@index([visibility])
+  @@index([category])
+}
+
+model GroupMembership {
+  id        String         @id @default(cuid())
+  groupId   String
+  patientId String
+  joinedAt  DateTime       @default(now())
+  group     Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  patient   PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, patientId])
+  @@index([patientId])
+}
+
+model GroupPost {
+  id        String        @id @default(cuid())
+  groupId   String
+  doctorId  String
+  title     String
+  content   String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  doctor    DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  group     Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([doctorId])
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  PATIENT
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PostStatus {
+  PUBLISHED
+  DRAFT
+}
+
+enum ConsultationStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  SEEN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum TreatmentPlanStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  GENERIC
+  TREATMENT_PLAN_CREATED
+  TREATMENT_PLAN_UPDATED
+  APPOINTMENT_BOOKED
+  CONSULTATION_ACCEPTED
+  FOLLOW_UP_SUBMITTED
+  DOCTOR_APPROVED
+  GROUP_POST_PUBLISHED
+  CHAT_MESSAGE
+  CONVERSATION_CREATED
+  MESSAGE_SEEN
+}
+
+enum PresenceStatus {
+  ONLINE
+  OFFLINE
+}
+
+enum GroupVisibility {
+  PUBLIC
+  PRIVATE
+}

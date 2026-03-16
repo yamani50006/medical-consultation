@@ -1,48 +1,57 @@
 import { z } from "zod";
 import AppError from "../../core/errors/AppError.js";
 
+const optionalQueryString = (schema) =>
+  z.preprocess((value) => {
+    if (typeof value === "string" && value.trim() === "") {
+      return undefined;
+    }
+
+    return value;
+  }, schema.optional());
+
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
-  sortBy: z.string().max(50).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional()
+  sortBy: optionalQueryString(z.string().max(50)),
+  sortOrder: optionalQueryString(z.enum(["asc", "desc"]))
 });
 
 export const listPendingDoctorsQuerySchema = paginationSchema;
 
 export const listUsersQuerySchema = paginationSchema.extend({
-  role: z.enum(["admin", "doctor", "patient"]).optional(),
-  status: z.enum(["active", "suspended", "pending", "rejected"]).optional(),
-  search: z.string().max(120).optional()
+  role: optionalQueryString(z.enum(["admin", "doctor", "patient"])),
+  status: optionalQueryString(z.enum(["active", "suspended", "pending", "rejected"])),
+  search: optionalQueryString(z.string().max(120))
 });
 
 export const listPostsQuerySchema = paginationSchema.extend({
-  status: z.enum(["published", "draft"]).optional(),
-  specialization: z.string().max(120).optional(),
-  search: z.string().max(120).optional()
+  status: optionalQueryString(z.enum(["published", "draft"])),
+  specialization: optionalQueryString(z.string().max(120)),
+  search: optionalQueryString(z.string().max(120))
 });
 
 export const listConsultationsQuerySchema = paginationSchema.extend({
-  status: z.enum(["pending", "accepted", "completed", "cancelled"]).optional(),
-  search: z.string().max(120).optional()
+  status: optionalQueryString(z.enum(["pending", "accepted", "completed", "cancelled"])),
+  search: optionalQueryString(z.string().max(120))
 });
 
 export const listAppointmentsQuerySchema = paginationSchema.extend({
-  status: z.enum(["scheduled", "completed", "cancelled"]).optional()
+  status: optionalQueryString(z.enum(["scheduled", "completed", "cancelled"]))
 });
 
 export const listAdminDoctorsQuerySchema = paginationSchema.extend({
-  status: z.enum(["active", "suspended", "pending", "rejected"]).optional(),
-  approvalStatus: z.enum(["pending", "approved", "rejected"]).optional(),
-  specialization: z.string().max(120).optional(),
-  city: z.string().max(120).optional(),
-  region: z.string().max(120).optional(),
-  search: z.string().max(120).optional(),
+  status: optionalQueryString(z.enum(["active", "suspended", "pending", "rejected"])),
+  approvalStatus: optionalQueryString(z.enum(["pending", "approved", "rejected"])),
+  specialization: optionalQueryString(z.string().max(120)),
+  city: optionalQueryString(z.string().max(120)),
+  region: optionalQueryString(z.string().max(120)),
+  search: optionalQueryString(z.string().max(120)),
   includeDeleted: z.coerce.boolean().optional(),
-  sortBy: z
-    .enum(["joinedAt", "lastActiveAt", "rating", "consultations", "consultationsToday", "consultationsWeek"])
-    .optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional()
+  sortBy: optionalQueryString(
+    z.enum(["joinedAt", "lastActiveAt", "rating", "consultations", "consultationsToday", "consultationsWeek"])
+  ),
+  sortOrder: optionalQueryString(z.enum(["asc", "desc"]))
 });
 
 export const doctorIdParamsSchema = z.object({
