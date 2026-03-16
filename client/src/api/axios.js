@@ -2,7 +2,7 @@ import axios from "axios";
 import { clearStoredUser, clearToken, getToken } from "../utils/token";
 
 const defaultBaseUrl = import.meta.env.PROD
-  ? "https://medical-consultation-khaki.vercel.app/api/v1"
+  ? "https://medical-consultation-f4ao.onrender.com/api/v1"
   : "http://localhost:5000/api/v1";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || defaultBaseUrl;
