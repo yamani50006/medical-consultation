@@ -23,7 +23,6 @@ import usersRoutes from "../modules/users/users.routes.js";
 const router = Router();
 
 router.use("/auth", authRoutes);
-router.use("/", chatRoutes);
 router.use("/users", usersRoutes);
 router.use("/doctors", doctorsRoutes);
 router.use("/patients", patientsRoutes);
@@ -42,5 +41,6 @@ router.use("/uploads", uploadsRoutes);
 router.use("/groups", groupsRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/admin", adminRoutes);
+router.use("/", chatRoutes);
 
 export default router;

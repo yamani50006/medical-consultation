@@ -7,7 +7,7 @@ import { listNotificationsQuerySchema } from "./notifications.validator.js";
 const router = Router();
 
 router.get(
-  "/",
+  ["", "/"],
   authMiddleware,
   validateRequest(listNotificationsQuerySchema, "query"),
   notificationsController.listMyNotifications
