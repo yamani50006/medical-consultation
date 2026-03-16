@@ -26,6 +26,8 @@ export default class DoctorsRepository extends BaseRepository {
       where: {
         id,
         approvalStatus: "APPROVED",
+        deletedAt: null,
+        acceptingNewConsultations: true,
         user: { status: "ACTIVE" }
       },
       include: {

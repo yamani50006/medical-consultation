@@ -19,9 +19,34 @@ class AdminController {
     }
   };
 
+  listDoctors = async (req, res, next) => {
+    try {
+      const result = await this.adminService.listDoctors(req.query);
+      return ApiResponse.success(res, {
+        message: "Doctors fetched successfully",
+        data: result.items,
+        meta: result.meta
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getDoctorDetails = async (req, res, next) => {
+    try {
+      const result = await this.adminService.getDoctorDetails(req.params.id);
+      return ApiResponse.success(res, {
+        message: "Doctor details fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   approveDoctor = async (req, res, next) => {
     try {
-      const result = await this.adminService.approveDoctor(req.params.id);
+      const result = await this.adminService.approveDoctor(req.params.id, req.user.userId);
       return ApiResponse.success(res, {
         message: "Doctor approved successfully",
         data: result
@@ -33,9 +58,81 @@ class AdminController {
 
   rejectDoctor = async (req, res, next) => {
     try {
-      const result = await this.adminService.rejectDoctor(req.params.id);
+      const result = await this.adminService.rejectDoctor(req.params.id, req.user.userId, req.body || {});
       return ApiResponse.success(res, {
         message: "Doctor rejected successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  suspendDoctor = async (req, res, next) => {
+    try {
+      const result = await this.adminService.suspendDoctor(req.params.id, req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        message: "Doctor suspended successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  reactivateDoctor = async (req, res, next) => {
+    try {
+      const result = await this.adminService.reactivateDoctor(req.params.id, req.user.userId, req.body || {});
+      return ApiResponse.success(res, {
+        message: "Doctor reactivated successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  softDeleteDoctor = async (req, res, next) => {
+    try {
+      const result = await this.adminService.softDeleteDoctor(req.params.id, req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        message: "Doctor soft deleted successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  verifyDoctor = async (req, res, next) => {
+    try {
+      const result = await this.adminService.verifyDoctor(req.params.id, req.user.userId);
+      return ApiResponse.success(res, {
+        message: "Doctor verified successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  updateDoctorBasicInfo = async (req, res, next) => {
+    try {
+      const result = await this.adminService.updateDoctorBasicInfo(req.params.id, req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        message: "Doctor updated successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  sendDoctorWarning = async (req, res, next) => {
+    try {
+      const result = await this.adminService.sendDoctorWarning(req.params.id, req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        message: "Warning sent successfully",
         data: result
       });
     } catch (error) {

@@ -3,8 +3,10 @@ import { createBrowserRouter } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import ProtectedRoute from "../layouts/ProtectedRoute";
 
+const AdminDashboardPage = lazy(() => import("../pages/AdminDashboardPage"));
+const AdminDoctorDetailsPage = lazy(() => import("../pages/AdminDoctorDetailsPage"));
+const AdminDoctorsPage = lazy(() => import("../pages/AdminDoctorsPage"));
 const AdminPendingDoctorsPage = lazy(() => import("../pages/AdminPendingDoctorsPage"));
-const AnalyticsSummaryPage = lazy(() => import("../pages/AnalyticsSummaryPage"));
 const AppointmentsPage = lazy(() => import("../pages/AppointmentsPage"));
 const ChatRoomPage = lazy(() => import("../pages/ChatRoomPage"));
 const ConsultationsPage = lazy(() => import("../pages/ConsultationsWorkspacePage"));
@@ -189,16 +191,24 @@ const router = createBrowserRouter([
         element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
         children: [
           {
+            path: "admin/dashboard",
+            element: withSuspense(AdminDashboardPage)
+          },
+          {
+            path: "admin/doctors",
+            element: withSuspense(AdminDoctorsPage)
+          },
+          {
+            path: "admin/doctors/:id",
+            element: withSuspense(AdminDoctorDetailsPage)
+          },
+          {
             path: "admin/pending-doctors",
             element: withSuspense(AdminPendingDoctorsPage)
           },
           {
-            path: "admin/dashboard",
-            element: withSuspense(RoleDashboardPage)
-          },
-          {
             path: "admin/analytics",
-            element: withSuspense(AnalyticsSummaryPage)
+            element: withSuspense(AdminDashboardPage)
           }
         ]
       },

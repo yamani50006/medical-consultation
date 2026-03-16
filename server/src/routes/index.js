@@ -1,5 +1,7 @@
 import { Router } from "express";
 import adminRoutes from "../modules/admin/admin.routes.js";
+import alertsRoutes from "../modules/alerts/alerts.routes.js";
+import analyticsRoutes from "../modules/analytics/analytics.routes.js";
 import appointmentsRoutes from "../modules/appointments/appointments.routes.js";
 import authRoutes from "../modules/auth/auth.routes.js";
 import chatRoutes from "../modules/chat/chat.routes.js";
@@ -41,6 +43,8 @@ router.use("/uploads", uploadsRoutes);
 router.use("/groups", groupsRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/admin", adminRoutes);
+router.use("/admin/analytics", analyticsRoutes);
+router.use("/admin/alerts", alertsRoutes);
 router.use("/", chatRoutes);
 
 export default router;

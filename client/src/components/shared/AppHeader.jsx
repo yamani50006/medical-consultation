@@ -76,8 +76,9 @@ export default function AppHeader() {
           label: "التقييمات",
           show: user?.role === "PATIENT" || user?.role === "DOCTOR"
         },
-        { to: "/admin/analytics", label: "التحليلات", show: user?.role === "ADMIN" },
-        { to: "/admin/pending-doctors", label: "الإدارة", show: user?.role === "ADMIN" }
+        { to: "/admin/dashboard", label: "لوحة الإدارة", show: user?.role === "ADMIN" },
+        { to: "/admin/doctors", label: "إدارة الأطباء", show: user?.role === "ADMIN" },
+        { to: "/admin/pending-doctors", label: "الطلبات المعلقة", show: user?.role === "ADMIN" }
       ].filter((item) => item.show),
     [isAuthenticated, unreadConversations, unreadNotifications, user?.role]
   );

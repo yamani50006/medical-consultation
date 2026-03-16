@@ -33,6 +33,8 @@ export default class RecommendationsRepository {
     return prisma.doctorProfile.findMany({
       where: {
         approvalStatus: "APPROVED",
+        deletedAt: null,
+        acceptingNewConsultations: true,
         user: {
           status: "ACTIVE"
         }

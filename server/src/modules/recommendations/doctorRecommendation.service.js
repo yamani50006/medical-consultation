@@ -173,6 +173,8 @@ export default class DoctorRecommendationService extends BaseService {
   buildDoctorWhereClause(query) {
     const conditions = [
       { approvalStatus: "APPROVED" },
+      { deletedAt: null },
+      { acceptingNewConsultations: true },
       { user: { status: "ACTIVE" } }
     ];
 

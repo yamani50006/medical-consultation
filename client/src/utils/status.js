@@ -2,18 +2,18 @@ export function getStatusBadgeVariant(status = "") {
   const normalized = status.toLowerCase();
 
   if (
-    ["approved", "published", "active", "completed", "scheduled", "accepted", "verified", "public"].includes(
+    ["approved", "published", "active", "completed", "scheduled", "accepted", "verified", "public", "resolved"].includes(
       normalized
     )
   ) {
     return "success";
   }
 
-  if (["pending", "draft", "private"].includes(normalized)) {
+  if (["pending", "draft", "private", "reviewing", "medium"].includes(normalized)) {
     return "warning";
   }
 
-  if (["cancelled", "rejected"].includes(normalized)) {
+  if (["cancelled", "rejected", "suspended", "critical", "high"].includes(normalized)) {
     return "danger";
   }
 
@@ -31,6 +31,20 @@ export function formatStatus(status = "") {
     scheduled: "مجدول",
     accepted: "مقبول",
     verified: "موثق",
+    suspended: "موقوف",
+    reviewing: "قيد المراجعة",
+    resolved: "تم الحل",
+    new: "جديد",
+    deleted: "محذوف منطقيًا",
+    verify_doctor: "توثيق الطبيب",
+    suspend_doctor: "إيقاف الطبيب",
+    reactivate_doctor: "إعادة تفعيل الطبيب",
+    soft_delete_doctor: "حذف منطقي للطبيب",
+    edit_doctor: "تعديل بيانات الطبيب",
+    send_warning: "إرسال تنبيه",
+    approve_doctor: "اعتماد الطبيب",
+    reject_doctor: "رفض الطبيب",
+    update_alert_status: "تحديث حالة التنبيه",
     pending: "قيد الانتظار",
     draft: "مسودة",
     public: "عام",

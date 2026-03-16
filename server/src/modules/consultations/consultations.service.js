@@ -105,7 +105,12 @@ export default class ConsultationsService extends BaseService {
       throw new AppError("No suitable doctors found", 404, "NO_SUITABLE_DOCTORS");
     }
 
-    if (doctor.approvalStatus !== "APPROVED" || doctor.user.status !== "ACTIVE") {
+    if (
+      doctor.approvalStatus !== "APPROVED" ||
+      doctor.user.status !== "ACTIVE" ||
+      doctor.deletedAt ||
+      doctor.acceptingNewConsultations === false
+    ) {
       throw new AppError("Doctor is not available for consultations", 400, "DOCTOR_NOT_AVAILABLE");
     }
 

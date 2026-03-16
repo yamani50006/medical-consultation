@@ -1,33 +1,48 @@
 import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
+import { safeUserSelect } from "../users/users.select.js";
+
+const adminUserSelect = {
+  id: true,
+  fullName: true,
+  email: true
+};
+
+const doctorAdminInclude = {
+  user: {
+    select: {
+      ...safeUserSelect,
+      presence: {
+        select: {
+          status: true,
+          lastSeenAt: true,
+          lastActiveAt: true
+        }
+      }
+    }
+  }
+};
 
 export default class AdminRepository extends BaseRepository {
   constructor() {
     super(prisma.user);
   }
 
+  transaction(callback) {
+    return prisma.$transaction(callback);
+  }
+
   listPendingDoctors({ skip, limit }) {
     return prisma.doctorProfile.findMany({
       where: {
         approvalStatus: "PENDING",
+        deletedAt: null,
         user: { status: "PENDING" }
       },
       skip,
       take: limit,
       orderBy: { createdAt: "asc" },
-      include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
+      include: doctorAdminInclude
     });
   }
 
@@ -35,47 +50,131 @@ export default class AdminRepository extends BaseRepository {
     return prisma.doctorProfile.count({
       where: {
         approvalStatus: "PENDING",
+        deletedAt: null,
         user: { status: "PENDING" }
       }
     });
   }
 
-  findDoctorProfileById(id) {
+  listManagedDoctors(where, { skip, limit, orderBy }) {
+    return prisma.doctorProfile.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: doctorAdminInclude
+    });
+  }
+
+  countManagedDoctors(where) {
+    return prisma.doctorProfile.count({ where });
+  }
+
+  findManagedDoctorById(id) {
     return prisma.doctorProfile.findUnique({
       where: { id },
+      include: doctorAdminInclude
+    });
+  }
+
+  findDoctorProfileById(id) {
+    return this.findManagedDoctorById(id);
+  }
+
+  listDoctorStatusHistory(doctorId, limit = 20) {
+    return prisma.doctorStatusHistory.findMany({
+      where: { doctorId },
+      take: limit,
+      orderBy: { createdAt: "desc" },
       include: {
-        user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            role: true,
-            status: true
-          }
+        changedByUser: {
+          select: adminUserSelect
         }
       }
     });
   }
 
-  updateDoctorApproval(doctorId, approvalStatus, userStatus, isVerified) {
-    return prisma.$transaction(async (tx) => {
+  listDoctorActionLogs(doctorId, limit = 20) {
+    return prisma.adminActionLog.findMany({
+      where: { targetDoctorId: doctorId },
+      take: limit,
+      orderBy: { createdAt: "desc" },
+      include: {
+        adminUser: {
+          select: adminUserSelect
+        }
+      }
+    });
+  }
+
+  listDoctorConsultationFacts(doctorIds, createdAtFilter = undefined) {
+    if (!doctorIds.length) {
+      return Promise.resolve([]);
+    }
+
+    return prisma.consultation.findMany({
+      where: {
+        doctorId: { in: doctorIds },
+        ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
+      },
+      select: {
+        id: true,
+        doctorId: true,
+        patientId: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        doctorResponse: true
+      }
+    });
+  }
+
+  listDoctorReviewFacts(doctorIds) {
+    if (!doctorIds.length) {
+      return Promise.resolve([]);
+    }
+
+    return prisma.review.findMany({
+      where: {
+        doctorId: { in: doctorIds }
+      },
+      select: {
+        id: true,
+        doctorId: true,
+        rating: true,
+        createdAt: true
+      }
+    });
+  }
+
+  countUpcomingAppointmentsByDoctorIds(doctorIds, now = new Date()) {
+    if (!doctorIds.length) {
+      return Promise.resolve([]);
+    }
+
+    return prisma.appointment.groupBy({
+      by: ["doctorId"],
+      where: {
+        doctorId: { in: doctorIds },
+        status: "SCHEDULED",
+        appointmentDate: { gte: now }
+      },
+      _count: {
+        _all: true
+      }
+    });
+  }
+
+  async updateDoctorApproval(doctorId, approvalStatus, userStatus, isVerified) {
+    return this.transaction(async (tx) => {
       const doctor = await tx.doctorProfile.update({
         where: { id: doctorId },
         data: {
           approvalStatus,
-          isVerified
+          isVerified,
+          acceptingNewConsultations: approvalStatus === "APPROVED" && userStatus === "ACTIVE"
         },
-        include: {
-          user: {
-            select: {
-              id: true,
-              fullName: true,
-              email: true,
-              role: true,
-              status: true
-            }
-          }
-        }
+        include: doctorAdminInclude
       });
 
       await tx.user.update({
@@ -84,6 +183,34 @@ export default class AdminRepository extends BaseRepository {
       });
 
       return doctor;
+    });
+  }
+
+  updateDoctorProfileTx(tx, doctorId, data) {
+    return tx.doctorProfile.update({
+      where: { id: doctorId },
+      data,
+      include: doctorAdminInclude
+    });
+  }
+
+  updateUserTx(tx, userId, data) {
+    return tx.user.update({
+      where: { id: userId },
+      data,
+      select: adminUserSelect
+    });
+  }
+
+  createDoctorStatusHistoryTx(tx, data) {
+    return tx.doctorStatusHistory.create({
+      data
+    });
+  }
+
+  createAdminActionLogTx(tx, data) {
+    return tx.adminActionLog.create({
+      data
     });
   }
 
@@ -119,11 +246,7 @@ export default class AdminRepository extends BaseRepository {
         doctor: {
           include: {
             user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
+              select: adminUserSelect
             }
           }
         }
@@ -145,22 +268,14 @@ export default class AdminRepository extends BaseRepository {
         patient: {
           include: {
             user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
+              select: adminUserSelect
             }
           }
         },
         doctor: {
           include: {
             user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
+              select: adminUserSelect
             }
           }
         }
@@ -182,22 +297,14 @@ export default class AdminRepository extends BaseRepository {
         patient: {
           include: {
             user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
+              select: adminUserSelect
             }
           }
         },
         doctor: {
           include: {
             user: {
-              select: {
-                id: true,
-                fullName: true,
-                email: true
-              }
+              select: adminUserSelect
             }
           }
         }

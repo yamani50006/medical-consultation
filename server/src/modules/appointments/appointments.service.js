@@ -24,7 +24,12 @@ export default class AppointmentsService extends BaseService {
       throw new AppError("Doctor profile not found", 404, "DOCTOR_PROFILE_NOT_FOUND");
     }
 
-    if (doctor.approvalStatus !== "APPROVED" || doctor.user.status !== "ACTIVE") {
+    if (
+      doctor.approvalStatus !== "APPROVED" ||
+      doctor.user.status !== "ACTIVE" ||
+      doctor.deletedAt ||
+      doctor.acceptingNewConsultations === false
+    ) {
       throw new AppError("Doctor is not available for appointments", 400, "DOCTOR_NOT_AVAILABLE");
     }
 

@@ -73,7 +73,10 @@ export default function AdminPendingDoctorsPage() {
   const handleReject = async (id) => {
     setError("");
     try {
-      await rejectDoctor(id);
+      await rejectDoctor(id, {
+        reason: "لم تستوفِ متطلبات الاعتماد الحالية",
+        note: "تم الرفض من شاشة المراجعة السريعة."
+      });
       await loadData();
     } catch (err) {
       setError(getErrorMessage(err, "تعذر رفض الطبيب."));
