@@ -16,20 +16,20 @@ export default function AdminDoctorsTable({ items, actionLoadingId, onSuspend, o
   }
 
   return (
-    <div className="overflow-hidden rounded-[32px] border border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.93),rgba(240,249,250,0.9))] shadow-[0_30px_100px_-56px_rgba(15,23,42,0.3)]">
-      <div className="flex items-center justify-between gap-4 border-b border-white/70 bg-[linear-gradient(90deg,rgba(13,148,136,0.12),rgba(6,182,212,0.08),rgba(255,255,255,0.2))] px-5 py-4">
+    <div className="overflow-hidden rounded-[32px] border border-border/60 bg-card/70 shadow-[0_30px_100px_-56px_rgba(15,23,42,0.3)]">
+      <div className="flex items-center justify-between gap-4 border-b border-border/60 bg-[linear-gradient(90deg,rgba(13,148,136,0.12),rgba(6,182,212,0.08),hsla(var(--card),0.28))] px-5 py-4">
         <div>
           <h2 className="font-display text-xl font-semibold text-slate-900">سجل الكادر الطبي</h2>
           <p className="mt-1 text-xs text-slate-500">عرض تشغيلي منظم يوازن بين القرار السريع ووضوح البيانات.</p>
         </div>
-        <div className="rounded-2xl border border-white/70 bg-white/80 px-3 py-2 text-xs font-semibold text-primary shadow-sm">
+        <div className="rounded-2xl border border-border/60 bg-card/60 px-3 py-2 text-xs font-semibold text-primary shadow-sm">
           {formatMetric(items.length)} طبيبًا في هذه الصفحة
         </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-[1180px] w-full text-sm">
-          <thead className="bg-[rgba(236,245,246,0.88)] text-slate-600">
+          <thead className="bg-secondary/55 text-slate-600">
             <tr>
               {[
                 "الطبيب",
@@ -50,7 +50,7 @@ export default function AdminDoctorsTable({ items, actionLoadingId, onSuspend, o
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[rgba(148,163,184,0.14)] bg-white/55">
+          <tbody className="divide-y divide-[rgba(148,163,184,0.14)] bg-card/35">
             {items.map((doctor) => {
               const busy = actionLoadingId === doctor.id;
               const isSuspended = doctor.accountStatus === "SUSPENDED";
@@ -59,13 +59,13 @@ export default function AdminDoctorsTable({ items, actionLoadingId, onSuspend, o
                 <tr
                   key={doctor.id}
                   data-admin-animate="row"
-                  className="group transition-colors duration-300 hover:bg-[rgba(240,249,250,0.72)]"
+                  className="group transition-colors duration-300 hover:bg-secondary/55"
                 >
                   <td className="px-4 py-5 align-top">
                     <div className="flex items-start gap-3">
                       <div className="mt-1 h-11 w-1 rounded-full bg-gradient-to-b from-teal-500 via-cyan-400 to-transparent opacity-80" />
                       <div className="space-y-1">
-                        <p className="font-semibold text-slate-900">{doctor.fullName}</p>
+                        <p className="font-semibold text-slate-400">{doctor.fullName}</p>
                         <p className="text-xs font-medium text-primary/90">{doctor.specialization}</p>
                         <p className="text-xs text-slate-500">{doctor.email}</p>
                       </div>
@@ -93,7 +93,7 @@ export default function AdminDoctorsTable({ items, actionLoadingId, onSuspend, o
                     <MetricPill value={doctor.uniquePatients} label="فريد" accent="slate" />
                   </td>
                   <td className="px-4 py-5 align-top">
-                    <div className="inline-flex min-w-20 flex-col rounded-2xl border border-amber-200/80 bg-amber-50/90 px-3 py-2 text-center">
+                    <div className="inline-flex min-w-20 flex-col rounded-2xl border border-amber-200/70 bg-amber-50/75 px-3 py-2 text-center">
                       <span className="font-display text-lg font-bold text-amber-700">{doctor.averageRating.toFixed(1)}</span>
                       <span className="text-[11px] text-amber-700/75">من 5</span>
                     </div>
@@ -148,12 +148,12 @@ export default function AdminDoctorsTable({ items, actionLoadingId, onSuspend, o
 function MetricPill({ value, label, accent = "default" }) {
   const accentClassName =
     accent === "teal"
-      ? "border-teal-200/80 bg-teal-50/90 text-teal-700"
+      ? "border-teal-200/70 bg-teal-50/75 text-teal-700"
       : accent === "cyan"
-        ? "border-cyan-200/80 bg-cyan-50/90 text-cyan-700"
+        ? "border-cyan-200/70 bg-cyan-50/75 text-cyan-700"
         : accent === "slate"
-          ? "border-slate-200/80 bg-slate-50/90 text-slate-700"
-          : "border-white/70 bg-white/80 text-slate-800";
+          ? "border-slate-200/70 bg-slate-50/75 text-slate-700"
+          : "border-border/60 bg-card/60 text-slate-200";
 
   return (
     <div className={`inline-flex min-w-20 flex-col rounded-2xl border px-3 py-2 text-center shadow-sm ${accentClassName}`}>

@@ -7,7 +7,7 @@ import { formatStatus, getStatusBadgeVariant } from "../../utils/status";
 
 export default function AdminAlertsPanel({ alerts, compact = false, onStatusChange }) {
   return (
-    <Card className="border-white/40 bg-white/80">
+    <Card className="border-border/60 bg-card/70">
       <CardHeader>
         <CardTitle>التنبيهات التشغيلية</CardTitle>
       </CardHeader>

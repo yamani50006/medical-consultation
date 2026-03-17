@@ -7,9 +7,9 @@ export default function AdminStatCard({ title, value, subtitle, tone = "primary"
     <Card
       data-admin-animate="card"
       className={cn(
-        "group relative overflow-hidden border-white/50 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(244,250,251,0.88))] shadow-[0_24px_80px_-42px_rgba(15,23,42,0.2)]",
-        tone === "danger" && "bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,244,244,0.92))]",
-        tone === "warning" && "bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,248,238,0.92))]"
+        "group relative overflow-hidden border-border/60 bg-card/40 shadow-[0_24px_80px_-42px_rgba(15,23,42,0.2)]",
+        tone === "danger" && "bg-[linear-gradient(180deg,hsla(var(--card),0.2),rgba(255,244,244,0.42))] dark:bg-[linear-gradient(180deg,hsla(var(--card),0.28),rgba(127,29,29,0.22))]",
+        tone === "warning" && "bg-[linear-gradient(180deg,hsla(var(--card),0.2),rgba(255,248,238,0.48))] dark:bg-[linear-gradient(180deg,hsla(var(--card),0.28),rgba(120,53,15,0.22))]"
       )}
     >
       <CardContent className="relative p-6">
@@ -31,12 +31,12 @@ export default function AdminStatCard({ title, value, subtitle, tone = "primary"
         />
         <div className="relative z-10 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-600">{title}</p>
-            <p className="mt-4 font-display text-3xl font-bold tracking-tight text-slate-900">{formatMetric(value)}</p>
-            {subtitle ? <p className="mt-2 max-w-[16rem] text-xs leading-6 text-slate-500">{subtitle}</p> : null}
+            <p className="text-sm font-medium text-foreground/75">{title}</p>
+            <p className="mt-4 font-display text-3xl font-bold tracking-tight text-foreground">{formatMetric(value)}</p>
+            {subtitle ? <p className="mt-2 max-w-[16rem] text-xs leading-6 text-muted-foreground">{subtitle}</p> : null}
           </div>
           {trend ? (
-            <div className="rounded-2xl border border-white/60 bg-white/70 px-3 py-2 text-xs font-semibold text-primary shadow-sm">
+            <div className="rounded-2xl border border-white/25 bg-white/35 px-3 py-2 text-xs font-semibold text-primary shadow-sm dark:border-white/10 dark:bg-white/5">
               {trend}
             </div>
           ) : null}

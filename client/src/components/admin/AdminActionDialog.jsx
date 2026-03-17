@@ -33,7 +33,7 @@ export default function AdminActionDialog({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <Card className="w-full max-w-xl border-white/50 bg-white/95 shadow-[0_40px_120px_-48px_rgba(15,23,42,0.55)]">
+      <Card className="w-full max-w-xl border-white/35 bg-card/45 shadow-[0_40px_120px_-48px_rgba(15,23,42,0.55)] dark:border-white/10 dark:bg-card/35">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <p className="text-sm text-muted-foreground">{description}</p>

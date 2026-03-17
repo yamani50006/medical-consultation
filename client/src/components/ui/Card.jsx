@@ -4,12 +4,12 @@ export function Card({ className, children, ...props }) {
   return (
     <div
       className={cn(
-        "glass-panel rounded-[28px] border border-border/60 shadow-card transition-colors duration-300",
+        "glass-panel isolate rounded-[28px] border border-border/60 shadow-card transition-[border-color,background-color,box-shadow,transform] duration-300",
         className
       )}
       {...props}
     >
-      {children}
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }

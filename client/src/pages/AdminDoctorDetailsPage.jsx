@@ -111,7 +111,7 @@ export default function AdminDoctorDetailsPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+        <Card data-admin-animate="card" className="border-white/30 bg-card/45 dark:border-white/10 dark:bg-card/35">
           <CardHeader>
             <CardTitle>تحرير البيانات الأساسية</CardTitle>
           </CardHeader>
@@ -153,7 +153,7 @@ export default function AdminDoctorDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+        <Card data-admin-animate="card" className="border-white/30 bg-card/45 dark:border-white/10 dark:bg-card/35">
           <CardHeader>
             <CardTitle>مقارنة الأداء الأسبوعي</CardTitle>
           </CardHeader>
@@ -169,13 +169,13 @@ export default function AdminDoctorDetailsPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+        <Card data-admin-animate="card" className="border-white/30 bg-card/45 dark:border-white/10 dark:bg-card/35">
           <CardHeader>
             <CardTitle>سجل الحالة</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {(doctor.statusHistory || []).map((item) => (
-              <div key={item.id} className="rounded-2xl bg-secondary/45 p-4">
+              <div key={item.id} className="rounded-2xl border border-white/20 bg-white/25 p-4 dark:border-white/10 dark:bg-white/5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">
                     {formatStatus(item.previousUserStatus || "pending")} ← {formatStatus(item.nextUserStatus)}
@@ -188,13 +188,13 @@ export default function AdminDoctorDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+        <Card data-admin-animate="card" className="border-white/30 bg-card/45 dark:border-white/10 dark:bg-card/35">
           <CardHeader>
             <CardTitle>سجل الإجراءات الإدارية</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {(doctor.recentActions || []).map((item) => (
-              <div key={item.id} className="rounded-2xl bg-secondary/45 p-4">
+              <div key={item.id} className="rounded-2xl border border-white/20 bg-white/25 p-4 dark:border-white/10 dark:bg-white/5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{formatStatus(item.action)}</p>
                   <span className="text-xs text-muted-foreground">{formatDateTime(item.createdAt)}</span>

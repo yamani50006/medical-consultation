@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
           </section>
 
           <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-            <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+            <Card data-admin-animate="card" className="border-border/60 bg-card/70">
               <CardHeader>
                 <CardTitle>متابعة المرضى والنمو</CardTitle>
               </CardHeader>
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
           </section>
 
           <section className="grid gap-4 xl:grid-cols-2">
-            <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+            <Card data-admin-animate="card" className="border-border/60 bg-card/70">
               <CardHeader>
                 <CardTitle>أكثر التخصصات طلبًا</CardTitle>
               </CardHeader>
@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
               </CardContent>
             </Card>
 
-            <Card data-admin-animate="card" className="border-white/40 bg-white/80">
+            <Card data-admin-animate="card" className="border-border/60 bg-card/70">
               <CardHeader>
                 <CardTitle>أكثر الأوقات ازدحامًا</CardTitle>
               </CardHeader>
