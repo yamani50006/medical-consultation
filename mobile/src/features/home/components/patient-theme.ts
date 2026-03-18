@@ -1,0 +1,21 @@
+export const patientPalette = {
+  page: "#08131D",
+  header: "#091621",
+  panel: "#101C29",
+  panelSoft: "#162434",
+  line: "rgba(63, 84, 104, 0.42)",
+  lineSoft: "rgba(59, 78, 97, 0.34)",
+  text: "#F4FBFF",
+  textMuted: "#8EA3B7",
+  primary: "#22B8AE",
+  primaryStrong: "#189B93",
+  primarySoft: "rgba(34,184,174,0.16)",
+  accent: "#24C5E7",
+  green: "#20C888",
+  yellow: "#E4AC43",
+  red: "#D66771",
+  glass: "rgba(10, 19, 37, 0.94)",
+  glassSoft: "rgba(7, 14, 28, 0.84)",
+  glassBorder: "rgba(71, 85, 105, 0.34)",
+  shadow: "rgba(2, 8, 23, 0.72)"
+} as const;
