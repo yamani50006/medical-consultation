@@ -7,7 +7,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "السماح للتطبيق بالوصول إلى الصور لتحديث صورة الملف الشخصي."
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,

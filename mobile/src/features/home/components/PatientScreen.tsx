@@ -3,16 +3,23 @@ import { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { usePatientPalette } from "@/features/home/components/patient-theme";
+import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 export function PatientScreen({ children }: { children: ReactNode }) {
+  const patientPalette = usePatientPalette();
+  const { scheme } = useAppTheme();
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: patientPalette.page }}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={[patientPalette.page, "#0B1723", patientPalette.page]} style={StyleSheet.absoluteFillObject} />
-        <LinearGradient colors={["rgba(36,197,231,0.10)", "transparent"]} style={styles.glowA} />
-        <LinearGradient colors={["rgba(34,184,174,0.16)", "transparent"]} style={styles.glowB} />
-        <View style={styles.grid} />
+        <LinearGradient
+          colors={[patientPalette.page, patientPalette.panelSoft, patientPalette.page]}
+          style={StyleSheet.absoluteFillObject}
+        />
+        <LinearGradient colors={[`${patientPalette.accent}18`, "transparent"]} style={styles.glowA} />
+        <LinearGradient colors={[`${patientPalette.primary}1F`, "transparent"]} style={styles.glowB} />
+        <View style={[styles.grid, { borderColor: scheme === "dark" ? "rgba(255,255,255,0.03)" : "rgba(84,100,118,0.08)" }]} />
         {children}
       </ScrollView>
     </SafeAreaView>
@@ -53,4 +60,3 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "15deg" }]
   }
 });
-

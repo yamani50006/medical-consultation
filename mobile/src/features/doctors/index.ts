@@ -1,3 +1,4 @@
-export * from "@/features/doctors/screens/DoctorDetailsScreen";
-export * from "@/features/doctors/screens/DoctorsListScreen";
-export * from "@/features/doctors/hooks/useDoctorQueries";
+export * from "./screens/DoctorDetailsScreen";
+export * from "./screens/DoctorsListScreen";
+export * from "./hooks/useDoctorQueries";
+export * from "./hooks/useDoctorProfileMutations";

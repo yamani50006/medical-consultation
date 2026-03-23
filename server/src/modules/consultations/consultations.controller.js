@@ -71,6 +71,58 @@ class ConsultationsController {
     }
   };
 
+  getConsultationById = async (req, res, next) => {
+    try {
+      const result = await this.consultationsService.getConsultationById(
+        req.user.userId,
+        req.user.role,
+        req.params.id
+      );
+      return ApiResponse.success(res, {
+        message: "Consultation fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  payConsultation = async (req, res, next) => {
+    try {
+      const result = await this.consultationsService.payConsultation(req.user.userId, req.params.id);
+      return ApiResponse.success(res, {
+        message: "Consultation payment completed successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  archiveConsultation = async (req, res, next) => {
+    try {
+      const result = await this.consultationsService.archiveConsultation(req.user.userId, req.params.id);
+      return ApiResponse.success(res, {
+        message: "Consultation archived successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  reopenConsultation = async (req, res, next) => {
+    try {
+      const result = await this.consultationsService.reopenConsultation(req.user.userId, req.params.id);
+      return ApiResponse.success(res, {
+        message: "Consultation reopened successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   respondToConsultation = async (req, res, next) => {
     try {
       const result = await this.consultationsService.respondToConsultation(

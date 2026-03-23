@@ -1,6 +1,7 @@
 import BaseService from "../../core/base/BaseService.js";
 import AppError from "../../core/errors/AppError.js";
 import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
+import { isAppointmentDateMatchingAvailability } from "../doctors/doctorAvailability.util.js";
 import NotificationsService from "../notifications/notifications.service.js";
 import AppointmentsRepository from "./appointments.repository.js";
 
@@ -35,6 +36,22 @@ export default class AppointmentsService extends BaseService {
 
     if (payload.appointmentDate <= new Date()) {
       throw new AppError("Appointment date must be in the future", 400, "INVALID_APPOINTMENT_DATE");
+    }
+
+    if (!doctor.availabilitySlots?.length) {
+      throw new AppError("Doctor has no available appointment slots", 400, "DOCTOR_HAS_NO_SLOTS");
+    }
+
+    if (!isAppointmentDateMatchingAvailability(payload.appointmentDate, doctor.availabilitySlots)) {
+      throw new AppError("Appointment date is not available for this doctor", 400, "APPOINTMENT_SLOT_UNAVAILABLE");
+    }
+
+    const conflictingAppointment = await this.appointmentsRepository.findScheduledConflict(
+      doctor.id,
+      payload.appointmentDate
+    );
+    if (conflictingAppointment) {
+      throw new AppError("Appointment slot is already booked", 409, "APPOINTMENT_SLOT_ALREADY_BOOKED");
     }
 
     const appointment = await this.appointmentsRepository.create({

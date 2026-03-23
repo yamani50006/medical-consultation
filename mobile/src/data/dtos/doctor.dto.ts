@@ -1,3 +1,30 @@
+export type DoctorAvailabilitySlotDto = {
+  weekday?: number;
+  time?: string;
+};
+
+export type DoctorRecommendationDto = {
+  totalScore?: number;
+  reasons?: string[];
+};
+
+export type DoctorAppointmentSlotDto = {
+  appointmentDate: string;
+  weekday?: number;
+  time?: string;
+};
+
+export type DoctorFiltersDto = {
+  specializations?: string[];
+  cities?: string[];
+  regions?: string[];
+  consultationModes?: ("any" | "online" | "in_person")[];
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+};
+
 export type DoctorDto = {
   id: string;
   fullName?: string;
@@ -34,4 +61,6 @@ export type DoctorDto = {
     averageRating?: number;
     totalReviews?: number;
   };
+  recommendation?: DoctorRecommendationDto;
+  availabilitySlots?: DoctorAvailabilitySlotDto[];
 };

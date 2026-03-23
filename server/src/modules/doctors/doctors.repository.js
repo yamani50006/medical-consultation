@@ -2,6 +2,15 @@ import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
 import { safeUserSelect } from "../users/users.select.js";
 
+const doctorProfileInclude = {
+  user: {
+    select: safeUserSelect
+  },
+  availabilitySlots: {
+    orderBy: [{ weekday: "asc" }, { time: "asc" }]
+  }
+};
+
 export default class DoctorsRepository extends BaseRepository {
   constructor() {
     super(prisma.doctorProfile);
@@ -13,11 +22,7 @@ export default class DoctorsRepository extends BaseRepository {
       skip,
       take: limit,
       orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: safeUserSelect
-        }
-      }
+      include: doctorProfileInclude
     });
   }
 
@@ -30,22 +35,14 @@ export default class DoctorsRepository extends BaseRepository {
         acceptingNewConsultations: true,
         user: { status: "ACTIVE" }
       },
-      include: {
-        user: {
-          select: safeUserSelect
-        }
-      }
+      include: doctorProfileInclude
     });
   }
 
   findByUserId(userId) {
     return this.model.findUnique({
       where: { userId },
-      include: {
-        user: {
-          select: safeUserSelect
-        }
-      }
+      include: doctorProfileInclude
     });
   }
 
@@ -53,11 +50,7 @@ export default class DoctorsRepository extends BaseRepository {
     return this.model.update({
       where: { userId },
       data,
-      include: {
-        user: {
-          select: safeUserSelect
-        }
-      }
+      include: doctorProfileInclude
     });
   }
 }

@@ -35,6 +35,16 @@ const booleanQuerySchema = z.preprocess((value) => {
   return value;
 }, z.boolean().optional());
 
+const availabilityTimeSchema = z
+  .string()
+  .trim()
+  .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Validation failed");
+
+const doctorAvailabilitySlotSchema = z.object({
+  weekday: z.coerce.number().int().min(0).max(6),
+  time: availabilityTimeSchema
+});
+
 const listDoctorsQueryBaseSchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
@@ -70,6 +80,10 @@ export const getRecommendedDoctorsQuerySchema = listDoctorsQueryBaseSchema.exten
   }
 );
 
+export const doctorAppointmentSlotsQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(30).optional()
+});
+
 export const updateDoctorProfileSchema = z.object({
   specialization: z.string().min(2).max(120).optional(),
   city: nullableTrimmedStringSchema(2, 120),
@@ -80,7 +94,8 @@ export const updateDoctorProfileSchema = z.object({
   consultationFee: z.coerce.number().int().min(0).max(100000).nullable().optional(),
   supportsOnline: z.boolean().optional(),
   supportsInPerson: z.boolean().optional(),
-  isAvailableNow: z.boolean().optional()
+  isAvailableNow: z.boolean().optional(),
+  availabilitySlots: z.array(doctorAvailabilitySlotSchema).max(200).optional()
 });
 
 export function validate(schema, source = "body") {

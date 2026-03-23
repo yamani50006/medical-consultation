@@ -67,6 +67,7 @@ model DoctorProfile {
   supportsInPerson  Boolean         @default(true)
   supportsOnline    Boolean         @default(true)
   appointments      Appointment[]
+  availabilitySlots DoctorAvailabilitySlot[]
   consultations     Consultation[]
   conversations     Conversation[]
   user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -75,6 +76,19 @@ model DoctorProfile {
   posts             Post[]
   reviews           Review[]
   treatmentPlans    TreatmentPlan[]
+}
+
+model DoctorAvailabilitySlot {
+  id        String        @id @default(cuid())
+  doctorId   String
+  weekday    Int
+  time       String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  doctor     DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, weekday, time])
+  @@index([doctorId, weekday])
 }
 
 model Post {

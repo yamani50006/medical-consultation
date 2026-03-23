@@ -29,4 +29,31 @@ export default class PatientsRepository extends BaseRepository {
       }
     });
   }
+
+  updateProfileAndUserByUserId(userId, { profileData, userData }) {
+    return prisma.$transaction(async (tx) => {
+      if (userData && Object.keys(userData).length > 0) {
+        await tx.user.update({
+          where: { id: userId },
+          data: userData
+        });
+      }
+
+      if (profileData && Object.keys(profileData).length > 0) {
+        await tx.patientProfile.update({
+          where: { userId },
+          data: profileData
+        });
+      }
+
+      return tx.patientProfile.findUnique({
+        where: { userId },
+        include: {
+          user: {
+            select: safeUserSelect
+          }
+        }
+      });
+    });
+  }
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { useDoctorsQuery } from "@/features/doctors";
+import { useDoctorsQuery } from "@/features/doctors/hooks/useDoctorQueries";
 import { usePostsQuery } from "@/features/posts";
 
 export function useHomeFeed() {
@@ -13,7 +13,9 @@ export function useHomeFeed() {
       search,
       setSearch,
       doctorsQuery,
-      postsQuery
+      postsQuery,
+      featuredDoctors: (doctorsQuery.data ?? []).slice(0, 4),
+      featuredPosts: (postsQuery.data ?? []).slice(0, 2)
     }),
     [search, doctorsQuery, postsQuery]
   );

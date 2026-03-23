@@ -2,11 +2,11 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
-import { useDoctorsQuery } from "@/features/doctors";
+import { useDoctorsQuery } from "@/features/doctors/hooks/useDoctorQueries";
 import { PatientScreen } from "@/features/home/components/PatientScreen";
 import { PatientSearchBar } from "@/features/home/components/PatientSearchBar";
 import { PatientSurface } from "@/features/home/components/PatientSurface";
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { usePatientPalette } from "@/features/home/components/patient-theme";
 import { PatientStackParamList } from "@/navigation/types";
 import { Button } from "@/shared/components/Button";
 import { DoctorCard } from "@/shared/components/DoctorCard";
@@ -21,6 +21,7 @@ export function StartBookingScreen({ navigation }: Props) {
   const [search, setSearch] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const query = useDoctorsQuery(search ? { search } : undefined);
+  const patientPalette = usePatientPalette();
   const doctors = query.data ?? [];
   const selectedDoctor = doctors.find((doctor) => doctor.id === selectedDoctorId) ?? null;
 
@@ -59,7 +60,7 @@ export function StartBookingScreen({ navigation }: Props) {
       <PatientSurface style={{ gap: 12 }}>
         <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 20, textAlign: "right" }}>2. متابعة التثبيت</Text>
         <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium", lineHeight: 24, textAlign: "right" }}>
-          بعد اختيار الطبيب ستنتقل مباشرة إلى صفحة الموعد لإدخال التاريخ والوقت المناسبين.
+          بعد اختيار الطبيب ستنتقل مباشرة إلى صفحة الموعد لاختيار التاريخ والوقت المناسبين.
         </Text>
         <Button
           title={selectedDoctor ? `متابعة مع ${selectedDoctor.fullName}` : "اختر الطبيب أولاً"}

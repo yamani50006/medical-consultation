@@ -1,46 +1,115 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Text, View } from "react-native";
+import { MotiView } from "moti";
+import { StyleSheet, Text, View } from "react-native";
 
-import { Button } from "@/shared/components/Button";
-import { Card } from "@/shared/components/Card";
-import { PremiumHero } from "@/shared/components/PremiumHero";
-import { Screen } from "@/shared/components/Screen";
+import { APP_NAME } from "@/core/constants/app";
+import { AuthBrandBlock, AuthButton, AuthFooterMeta, AuthPanel, AuthShell, authPalette } from "@/features/auth/components";
 import { AuthStackParamList } from "@/navigation/types";
-import { useAppTheme } from "@/shared/hooks/useAppTheme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Onboarding">;
 
-export function OnboardingScreen({ navigation }: Props) {
-  const { theme } = useAppTheme();
+const highlights = [
+  {
+    title: "حجز أسرع",
+    description: "تصفّح الأطباء واحجز مباشرة من نفس التدفق بدون تعقيد."
+  },
+  {
+    title: "استشارات منظّمة",
+    description: "تابع المحادثات والمواعيد والإشعارات من واجهة متناسقة."
+  },
+  {
+    title: "مصمم للعربية",
+    description: "واجهة RTL واضحة بتدرّجات هادئة وتباين مريح للعين."
+  }
+];
 
+export function OnboardingScreen({ navigation }: Props) {
   return (
-    <Screen>
-      <PremiumHero
-        eyebrow="Glass Medical Platform"
-        title="رعاية رقمية بنكهة فاخرة"
-        subtitle="نفس هوية الويب، نفس الألوان، ونفس الإحساس الزجاجي لكن بتجربة موبايل أكثر نعومة وأناقة."
-      />
-      <Card style={{ borderRadius: 32 }}>
-        <Text style={{ color: theme.colors.text.primary, fontFamily: "Cairo_700Bold", fontSize: 26 }}>
-          منصة طبية مصممة للعربية من البداية
-        </Text>
-        <Text style={{ color: theme.colors.text.secondary, fontFamily: "Cairo_500Medium", lineHeight: 28 }}>
-          احجز مع طبيب مناسب، تابع استشارتك، واستلم الإشعارات والمواعيد في واجهات غنية بالعمق البصري ومساحات مريحة.
-        </Text>
-        <View style={{ gap: 10 }}>
-          {[
-            "اختيار الطبيب حسب التخصص والتقييم والتوفر",
-            "حجز سريع وواضح بتجربة بصريّة متوازنة",
-            "دعم كامل للعربية وDark Mode"
-          ].map((item) => (
-            <View key={item} style={{ flexDirection: "row-reverse", alignItems: "center", gap: 10 }}>
-              <View style={{ width: 8, height: 8, borderRadius: 8, backgroundColor: theme.colors.brand.primary }} />
-              <Text style={{ color: theme.colors.text.secondary, fontFamily: "Cairo_500Medium", flex: 1 }}>{item}</Text>
-            </View>
-          ))}
-        </View>
-      </Card>
-      <Button title="بدء الاستخدام" onPress={() => navigation.replace("Login")} />
-    </Screen>
+    <AuthShell footer={<AuthFooterMeta />}>
+      <MotiView from={{ opacity: 0, translateY: 18 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 650 }}>
+        <AuthBrandBlock
+          eyebrow="بوابة العناية الطبية"
+          title={APP_NAME}
+          subtitle="تجربة دخول وتسجيل موحّدة بنفس الهوية الداكنة الراقية الظاهرة في التصميم المرجعي، مع انتقالات ناعمة وشاشات قابلة للتوسعة."
+          caption="Premium Care Experience"
+        />
+      </MotiView>
+
+      <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ delay: 120, type: "timing", duration: 650 }}>
+        <AuthPanel>
+          <Text style={styles.sectionTitle}>كل ما تحتاجه في رحلة المريض والطبيب</Text>
+          <View style={styles.list}>
+            {highlights.map((item, index) => (
+              <View key={item.title} style={[styles.featureCard, index === 2 && styles.featureCardCompact]}>
+                <View style={styles.featureBadge}>
+                  <Text style={styles.featureIndex}>{`0${index + 1}`}</Text>
+                </View>
+                <View style={styles.featureCopy}>
+                  <Text style={styles.featureTitle}>{item.title}</Text>
+                  <Text style={styles.featureDescription}>{item.description}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+          <AuthButton title="بدء الاستخدام" icon="arrow-forward" onPress={() => navigation.replace("Login")} />
+          <AuthButton title="إنشاء حساب جديد" variant="secondary" icon="person-add-outline" onPress={() => navigation.replace("AccountType")} />
+        </AuthPanel>
+      </MotiView>
+    </AuthShell>
   );
 }
+
+const styles = StyleSheet.create({
+  sectionTitle: {
+    color: authPalette.text,
+    fontFamily: "Cairo_700Bold",
+    fontSize: 21,
+    textAlign: "right"
+  },
+  list: {
+    gap: 12
+  },
+  featureCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: authPalette.borderStrong,
+    backgroundColor: "rgba(20, 35, 50, 0.72)",
+    padding: 16,
+    flexDirection: "row-reverse",
+    alignItems: "flex-start",
+    gap: 14
+  },
+  featureCardCompact: {
+    marginBottom: 4
+  },
+  featureBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: authPalette.accentMuted
+  },
+  featureIndex: {
+    color: authPalette.accentStrong,
+    fontFamily: "Cairo_700Bold",
+    fontSize: 13
+  },
+  featureCopy: {
+    flex: 1,
+    gap: 4
+  },
+  featureTitle: {
+    color: authPalette.text,
+    fontFamily: "Cairo_700Bold",
+    fontSize: 16,
+    textAlign: "right"
+  },
+  featureDescription: {
+    color: authPalette.textMuted,
+    fontFamily: "Cairo_500Medium",
+    fontSize: 13,
+    lineHeight: 22,
+    textAlign: "right"
+  }
+});

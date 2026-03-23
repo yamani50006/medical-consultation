@@ -7,5 +7,5 @@ export type NotificationEntity = {
   createdAt: string;
   conversationId?: string | null;
   entityId?: string | null;
+  entityType?: string | null;
 };
-

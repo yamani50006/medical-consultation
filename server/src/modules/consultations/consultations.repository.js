@@ -1,27 +1,118 @@
 import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
 
+const userPresenceSelect = {
+  status: true,
+  lastSeenAt: true,
+  lastActiveAt: true
+};
+
+const doctorUserSelect = {
+  id: true,
+  fullName: true,
+  email: true,
+  profileImageUrl: true,
+  role: true,
+  status: true,
+  presence: {
+    select: userPresenceSelect
+  }
+};
+
+const patientUserSelect = {
+  id: true,
+  fullName: true,
+  email: true,
+  profileImageUrl: true,
+  role: true,
+  status: true
+};
+
+const messageInclude = {
+  sender: {
+    select: {
+      id: true,
+      fullName: true,
+      profileImageUrl: true,
+      role: true
+    }
+  },
+  attachments: {
+    orderBy: {
+      createdAt: "asc"
+    }
+  }
+};
+
 const consultationInclude = {
   patient: {
     include: {
       user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true
-        }
+        select: patientUserSelect
       }
     }
   },
   doctor: {
     include: {
       user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true
-        }
+        select: doctorUserSelect
       }
+    }
+  },
+  conversation: {
+    include: {
+      participants: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profileImageUrl: true,
+              role: true,
+              presence: {
+                select: userPresenceSelect
+              },
+              doctorProfile: {
+                select: {
+                  id: true,
+                  specialization: true,
+                  city: true,
+                  region: true
+                }
+              },
+              patientProfile: {
+                select: {
+                  id: true,
+                  city: true,
+                  region: true
+                }
+              }
+            }
+          }
+        }
+      },
+      messages: {
+        take: 6,
+        orderBy: {
+          createdAt: "desc"
+        },
+        include: messageInclude
+      }
+    }
+  },
+  reviews: {
+    orderBy: {
+      createdAt: "desc"
+    },
+    select: {
+      id: true,
+      patientId: true,
+      doctorId: true,
+      consultationId: true,
+      rating: true,
+      comment: true,
+      createdAt: true
     }
   }
 };
@@ -72,7 +163,7 @@ export default class ConsultationsRepository extends BaseRepository {
       },
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: { updatedAt: "desc" },
       include: consultationInclude
     });
   }
@@ -85,7 +176,7 @@ export default class ConsultationsRepository extends BaseRepository {
       },
       skip,
       take: limit,
-      orderBy: { createdAt: "desc" },
+      orderBy: { updatedAt: "desc" },
       include: consultationInclude
     });
   }
@@ -101,6 +192,49 @@ export default class ConsultationsRepository extends BaseRepository {
     return this.model.create({
       data,
       include: consultationInclude
+    });
+  }
+
+  updateWithRelations(id, data) {
+    return this.model.update({
+      where: { id },
+      data,
+      include: consultationInclude
+    });
+  }
+
+  listNotificationsByConsultations(userId, consultationIds = [], conversationIds = []) {
+    const orConditions = [];
+
+    if (consultationIds.length) {
+      orConditions.push({
+        entityType: "consultation",
+        entityId: {
+          in: consultationIds
+        }
+      });
+    }
+
+    if (conversationIds.length) {
+      orConditions.push({
+        conversationId: {
+          in: conversationIds
+        }
+      });
+    }
+
+    if (!orConditions.length) {
+      return Promise.resolve([]);
+    }
+
+    return prisma.notification.findMany({
+      where: {
+        userId,
+        OR: orConditions
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
     });
   }
 }

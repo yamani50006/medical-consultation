@@ -1,122 +1,172 @@
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Pressable, Text, View } from "react-native";
+import { useMemo } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { HomeArticleHighlightCard } from "@/features/home/components/HomeArticleHighlightCard";
+import { HomeDoctorSpotlightCard } from "@/features/home/components/HomeDoctorSpotlightCard";
+import { HomeHeroBanner } from "@/features/home/components/HomeHeroBanner";
+import { HomeQuickActionCard } from "@/features/home/components/HomeQuickActionCard";
+import { HomeSectionHeader } from "@/features/home/components/HomeSectionHeader";
+import { HomeSectionStateCard } from "@/features/home/components/HomeSectionStateCard";
 import { PatientHeader } from "@/features/home/components/PatientHeader";
 import { PatientScreen } from "@/features/home/components/PatientScreen";
 import { PatientSearchBar } from "@/features/home/components/PatientSearchBar";
-import { PatientSurface } from "@/features/home/components/PatientSurface";
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { usePatientPalette } from "@/features/home/components/patient-theme";
 import { useHomeFeed } from "@/features/home";
-import { DoctorCard } from "@/shared/components/DoctorCard";
-import { EmptyState } from "@/shared/components/EmptyState";
-import { ErrorState } from "@/shared/components/ErrorState";
-import { Loader } from "@/shared/components/Loader";
 import { useAuthStore } from "@/store/auth/auth.store";
+
+const quickActions = [
+  { key: "appointments", title: "حجز موعد", icon: "calendar-outline" as const, route: "StartBooking" },
+  { key: "request", title: "طلب استشارة", icon: "chatbubble-outline" as const, route: "ConsultationRequest" },
+  { key: "consultations", title: "استشاراتي", icon: "reader-outline" as const, route: "MyConsultations" }
+] as const;
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
-  const { search, setSearch, doctorsQuery, postsQuery } = useHomeFeed();
+  const { search, setSearch, doctorsQuery, postsQuery, featuredDoctors, featuredPosts } = useHomeFeed();
   const currentUser = useAuthStore((state) => state.user);
+  const patientPalette = usePatientPalette();
+
+  const subtitle = useMemo(() => {
+    if (!currentUser?.fullName) {
+      return "مرحبًا بك";
+    }
+
+    const firstName = currentUser.fullName.trim().split(" ")[0];
+    return `مرحبًا بك ${firstName}`;
+  }, [currentUser?.fullName]);
+
+  const featuredPost = featuredPosts[0];
 
   return (
     <PatientScreen>
-      <PatientHeader title={currentUser?.fullName ?? "حسابك"} subtitle="مرحبًا بك" />
-      <PatientSearchBar value={search} onChangeText={setSearch} />
-      <View style={{ flexDirection: "row-reverse", gap: 8, flexWrap: "wrap" }}>
-        {["الكل", "طب الأطفال", "الباطني", "القلب"].map((item, index) => (
-          <View
-            key={item}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: index === 0 ? patientPalette.primary : patientPalette.panel,
-              borderWidth: 1,
-              borderColor: index === 0 ? "transparent" : patientPalette.glassBorder
-            }}
+      <PatientHeader
+        title="الرئيسية"
+        subtitle={subtitle}
+        avatarName={currentUser?.fullName ?? "المريض"}
+        avatarImageUrl={currentUser?.profileImageUrl}
+        onNotificationPress={() => navigation.navigate("Notifications")}
+      />
+
+      <PatientSearchBar value={search} onChangeText={setSearch} placeholder="ابحث عن تخصص أو طبيب" />
+
+      <HomeHeroBanner
+        title="صحتك تهمنا"
+        description="احصل على استشارات مجانية وفورية مع نخبة من الأطباء المتخصصين."
+        ctaLabel="اكتشف الآن"
+        onPress={() => navigation.navigate("ConsultationRequest")}
+      />
+
+      <View style={styles.quickActionsRow}>
+        {quickActions.map((item) => (
+          <HomeQuickActionCard
+            key={item.key}
+            title={item.title}
+            icon={item.icon}
+            onPress={() => navigation.navigate(item.route)}
+          />
+        ))}
+      </View>
+
+      <View style={styles.sectionBlock}>
+        <HomeSectionHeader title="أفضل الأطباء" actionLabel="عرض الكل" onActionPress={() => navigation.navigate("DoctorsTab")} />
+        {doctorsQuery.isLoading ? (
+          <HomeSectionStateCard
+            title="جاري تحميل الأطباء"
+            description="نجهز لك الأطباء الأعلى تقييمًا والمتاحين الآن."
+            isLoading
+          />
+        ) : null}
+        {doctorsQuery.isError ? (
+          <HomeSectionStateCard
+            title="تعذر تحميل الأطباء"
+            description="حدثت مشكلة أثناء جلب البيانات. حاول مرة أخرى."
+            actionLabel="إعادة المحاولة"
+            onActionPress={() => doctorsQuery.refetch()}
+            tone="danger"
+          />
+        ) : null}
+        {!doctorsQuery.isLoading && !doctorsQuery.isError && featuredDoctors.length === 0 ? (
+          <HomeSectionStateCard
+            title="لا توجد نتائج حالياً"
+            description={search ? "جرّب تعديل البحث أو استخدام اسم تخصص آخر." : "سيظهر الأطباء هنا بمجرد توفر بيانات مناسبة."}
+            actionLabel={search ? "مسح البحث" : undefined}
+            onActionPress={search ? () => setSearch("") : undefined}
+          />
+        ) : null}
+        {!doctorsQuery.isLoading && !doctorsQuery.isError && featuredDoctors.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.doctorsScroller}
           >
-            <Text style={{ color: index === 0 ? "#FFFFFF" : patientPalette.textMuted, fontFamily: "Cairo_700Bold", fontSize: 13 }}>{item}</Text>
-          </View>
-        ))}
+            {featuredDoctors.map((doctor) => (
+              <HomeDoctorSpotlightCard
+                key={doctor.id}
+                doctor={doctor}
+                onPress={() => navigation.navigate("DoctorDetails", { doctorId: doctor.id })}
+              />
+            ))}
+          </ScrollView>
+        ) : null}
       </View>
 
-      <PatientSurface style={{ minHeight: 160, justifyContent: "space-between", overflow: "hidden" }}>
-        <LinearGradient colors={[patientPalette.primaryStrong, patientPalette.primary, "#1B827D"]} style={{ position: "absolute", inset: 0 }} />
-        <View style={{ position: "absolute", left: 16, bottom: 16, width: 88, height: 88, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.16)", alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ color: "rgba(255,255,255,0.25)", fontSize: 42 }}>✚</Text>
-        </View>
-        <View style={{ alignItems: "flex-end", paddingLeft: 80 }}>
-          <Text style={{ color: "#FFFFFF", fontFamily: "Cairo_700Bold", fontSize: 28 }}>صحتك تهمنا</Text>
-          <Text style={{ color: "rgba(255,255,255,0.82)", fontFamily: "Cairo_500Medium", lineHeight: 24, textAlign: "right" }}>
-            احصل على استشارة مجانية لأول مرة مع فريق من الأطباء.
+      <View style={styles.sectionBlock}>
+        <HomeSectionHeader title="نصائح ومنشورات" />
+        {postsQuery.isLoading ? (
+          <HomeSectionStateCard
+            title="جاري تحميل المحتوى الطبي"
+            description="نجهز لك أحدث النصائح والمنشورات الموثوقة."
+            isLoading
+          />
+        ) : null}
+        {postsQuery.isError ? (
+          <HomeSectionStateCard
+            title="تعذر تحميل المنشورات"
+            description="تعذر جلب المحتوى الآن. أعد المحاولة بعد قليل."
+            actionLabel="إعادة المحاولة"
+            onActionPress={() => postsQuery.refetch()}
+            tone="danger"
+          />
+        ) : null}
+        {!postsQuery.isLoading && !postsQuery.isError && !featuredPost ? (
+          <HomeSectionStateCard
+            title="لا توجد منشورات متاحة"
+            description="سيظهر المحتوى التثقيفي الطبي هنا عند نشره."
+          />
+        ) : null}
+        {!postsQuery.isLoading && !postsQuery.isError && featuredPost ? (
+          <HomeArticleHighlightCard post={featuredPost} />
+        ) : null}
+        {!postsQuery.isLoading && !postsQuery.isError && featuredPosts.length > 1 ? (
+          <Text style={[styles.articleHint, { color: patientPalette.textMuted }]}>
+            يتم تحديث هذه النصائح باستمرار من المحتوى الطبي المعتمد.
           </Text>
-        </View>
-        <View style={{ alignSelf: "flex-end", backgroundColor: "#FFFFFF", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 }}>
-          <Text style={{ color: patientPalette.primaryStrong, fontFamily: "Cairo_700Bold" }}>اكتشف الآن</Text>
-        </View>
-      </PatientSurface>
-
-      <View style={{ flexDirection: "row-reverse", gap: 12 }}>
-        <QuickCard title="طلب استشارة" icon="chatbox-ellipses" onPress={() => navigation.navigate("ConsultationRequest")} />
-        <QuickCard title="حجز موعد" icon="calendar" onPress={() => navigation.navigate("StartBooking")} />
-      </View>
-
-      <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 24 }}>أفضل الأطباء</Text>
-        <Pressable onPress={() => navigation.navigate("DoctorsTab")}>
-          <Text style={{ color: patientPalette.primary, fontFamily: "Cairo_700Bold", fontSize: 13 }}>عرض الكل</Text>
-        </Pressable>
-      </View>
-      {doctorsQuery.isLoading ? <Loader /> : null}
-      {doctorsQuery.isError ? <ErrorState message="تعذر تحميل الأطباء" onRetry={doctorsQuery.refetch} /> : null}
-      {doctorsQuery.data?.length === 0 ? <EmptyState title="لا يوجد نتائج" description="جرّب تخصصًا أو اسمًا مختلفًا." /> : null}
-      {doctorsQuery.data?.length ? (
-        <View style={{ gap: 14 }}>
-          {doctorsQuery.data.map((item) => (
-            <DoctorCard key={item.id} doctor={item} onPress={() => navigation.navigate("DoctorDetails", { doctorId: item.id })} />
-          ))}
-        </View>
-      ) : null}
-      <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 24 }}>نصائح ومنشورات</Text>
-        <Text style={{ color: patientPalette.primary, fontFamily: "Cairo_700Bold", fontSize: 13 }}>عرض الكل</Text>
-      </View>
-      <View style={{ gap: 12 }}>
-        {postsQuery.data?.slice(0, 3).map((post) => (
-          <PatientSurface key={post.id}>
-            <View style={{ height: 150, borderRadius: 18, backgroundColor: "#1C2D3B", marginBottom: 12 }} />
-            <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 16, textAlign: "right" }}>{post.title}</Text>
-            <Text numberOfLines={2} style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium", lineHeight: 24, textAlign: "right" }}>
-              {post.content}
-            </Text>
-            <View style={{ alignSelf: "flex-end", marginTop: 8, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: patientPalette.panelSoft }}>
-              <Text style={{ color: patientPalette.primary, fontFamily: "Cairo_700Bold", fontSize: 13 }}>اقرأ المزيد</Text>
-            </View>
-          </PatientSurface>
-        ))}
+        ) : null}
       </View>
     </PatientScreen>
   );
 }
 
-function QuickCard({
-  title,
-  icon,
-  onPress
-}: {
-  title: string;
-  icon: "chatbox-ellipses" | "calendar";
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={{ flex: 1 }}>
-      <PatientSurface style={{ minHeight: 118, alignItems: "center", justifyContent: "center", gap: 10 }}>
-        <View style={{ width: 52, height: 52, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: `${patientPalette.primary}20` }}>
-          <Text style={{ color: patientPalette.primary, fontSize: 22 }}>{icon === "calendar" ? "🗓" : "💬"}</Text>
-        </View>
-        <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 16 }}>{title}</Text>
-      </PatientSurface>
-    </Pressable>
-  );
-}
+const styles = StyleSheet.create({
+  quickActionsRow: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingTop: 2
+  },
+  sectionBlock: {
+    gap: 14
+  },
+  doctorsScroller: {
+    flexDirection: "row-reverse",
+    gap: 12,
+    paddingRight: 4
+  },
+  articleHint: {
+    fontFamily: "Cairo_500Medium",
+    fontSize: 13,
+    lineHeight: 22,
+    textAlign: "right"
+  }
+});

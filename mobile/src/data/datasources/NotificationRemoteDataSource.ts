@@ -11,5 +11,12 @@ export class NotificationService extends BaseApiService {
   list(params?: Record<string, unknown>) {
     return this.get<ApiResponse<NotificationDto[]>>("/notifications", { params });
   }
-}
 
+  markAsRead(id: string) {
+    return this.patch<ApiResponse<NotificationDto>>(`/notifications/${id}/read`);
+  }
+
+  markAllAsRead() {
+    return this.patch<ApiResponse<{ count: number }>>("/notifications/read-all");
+  }
+}

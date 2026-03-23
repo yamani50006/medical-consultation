@@ -3,6 +3,7 @@ import { authMiddleware } from "../../core/middlewares/authMiddleware.js";
 import { roleMiddleware } from "../../core/middlewares/roleMiddleware.js";
 import doctorsController from "./doctors.controller.js";
 import {
+  doctorAppointmentSlotsQuerySchema,
   getRecommendedDoctorsQuerySchema,
   listDoctorsQuerySchema,
   updateDoctorProfileSchema,
@@ -27,6 +28,11 @@ router.patch(
   roleMiddleware("DOCTOR"),
   validate(updateDoctorProfileSchema),
   doctorsController.updateMyProfile
+);
+router.get(
+  "/:id/appointment-slots",
+  validate(doctorAppointmentSlotsQuerySchema, "query"),
+  doctorsController.getDoctorAppointmentSlots
 );
 router.get("/:id", doctorsController.getDoctorById);
 

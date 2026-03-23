@@ -33,7 +33,7 @@ export function ScreenHeader({
             }
           ]}
         >
-          <Ionicons name="arrow-forward" size={20} color={theme.colors.text.primary} />
+          <Ionicons name="arrow-forward" size={20} color={theme.colors.text.primary} style={styles.roateIcon} />
         </Pressable>
       ) : null}
     </View>
@@ -67,6 +67,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center"
+  }
+  ,
+  roateIcon:{
+    transform: [{ rotate: "180deg" }]
   }
 });
 

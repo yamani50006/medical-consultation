@@ -1,6 +1,15 @@
 import prisma from "../../config/db.js";
 import BaseRepository from "../../core/base/BaseRepository.js";
 
+const doctorInclude = {
+  user: {
+    select: { id: true, fullName: true, status: true }
+  },
+  availabilitySlots: {
+    orderBy: [{ weekday: "asc" }, { time: "asc" }]
+  }
+};
+
 export default class AppointmentsRepository extends BaseRepository {
   constructor() {
     super(prisma.appointment);
@@ -20,21 +29,45 @@ export default class AppointmentsRepository extends BaseRepository {
   findDoctorByUserId(userId) {
     return prisma.doctorProfile.findUnique({
       where: { userId },
-      include: {
-        user: {
-          select: { id: true, fullName: true, status: true }
-        }
-      }
+      include: doctorInclude
     });
   }
 
   findDoctorById(id) {
     return prisma.doctorProfile.findUnique({
       where: { id },
-      include: {
-        user: {
-          select: { id: true, fullName: true, status: true }
+      include: doctorInclude
+    });
+  }
+
+  listScheduledByDoctorBetween(doctorId, startDate, endDate) {
+    return this.model.findMany({
+      where: {
+        doctorId,
+        status: "SCHEDULED",
+        appointmentDate: {
+          gte: startDate,
+          lte: endDate
         }
+      },
+      select: {
+        appointmentDate: true
+      },
+      orderBy: {
+        appointmentDate: "asc"
+      }
+    });
+  }
+
+  findScheduledConflict(doctorId, appointmentDate) {
+    return this.model.findFirst({
+      where: {
+        doctorId,
+        status: "SCHEDULED",
+        appointmentDate
+      },
+      select: {
+        id: true
       }
     });
   }

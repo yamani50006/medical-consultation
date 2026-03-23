@@ -3,15 +3,17 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
 import { AppointmentsListScreen } from "@/features/appointments";
 import { MessagesScreen } from "@/features/chat";
-import { DoctorsListScreen } from "@/features/doctors";
+import { DoctorsListScreen } from "@/features/doctors/screens/DoctorsListScreen";
 import { HomeScreen } from "@/features/home";
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { usePatientPalette } from "@/features/home/components/patient-theme";
 import { ProfileScreen } from "@/features/profile";
 import { PatientTabParamList } from "@/navigation/types";
 
 const Tab = createBottomTabNavigator<PatientTabParamList>();
 
 export function PatientTabs() {
+  const patientPalette = usePatientPalette();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

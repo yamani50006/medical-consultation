@@ -6,7 +6,7 @@ import { useAppointmentsQuery } from "@/features/appointments";
 import { PatientHeader } from "@/features/home/components/PatientHeader";
 import { PatientScreen } from "@/features/home/components/PatientScreen";
 import { PatientSurface } from "@/features/home/components/PatientSurface";
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { PatientPalette, usePatientPalette } from "@/features/home/components/patient-theme";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ErrorState } from "@/shared/components/ErrorState";
 import { Loader } from "@/shared/components/Loader";
@@ -14,6 +14,7 @@ import { Loader } from "@/shared/components/Loader";
 export function AppointmentsListScreen() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "history">("upcoming");
   const query = useAppointmentsQuery({ limit: 20 });
+  const patientPalette = usePatientPalette();
   const items = useMemo(() => {
     const now = Date.now();
     return (query.data ?? []).filter((appointment) => {
@@ -65,8 +66,20 @@ export function AppointmentsListScreen() {
               </View>
             </View>
 
-            <View style={{ alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: `${getAppointmentTone(item).background}18`, borderWidth: 1, borderColor: `${getAppointmentTone(item).background}33` }}>
-              <Text style={{ color: getAppointmentTone(item).text, fontFamily: "Cairo_700Bold", fontSize: 12 }}>{getAppointmentStatusLabel(item)}</Text>
+            <View
+              style={{
+                alignSelf: "flex-start",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 999,
+                backgroundColor: `${getAppointmentTone(item, patientPalette).background}18`,
+                borderWidth: 1,
+                borderColor: `${getAppointmentTone(item, patientPalette).background}33`
+              }}
+            >
+              <Text style={{ color: getAppointmentTone(item, patientPalette).text, fontFamily: "Cairo_700Bold", fontSize: 12 }}>
+                {getAppointmentStatusLabel(item)}
+              </Text>
             </View>
 
             <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", borderRadius: 18, backgroundColor: patientPalette.panelSoft, borderWidth: 1, borderColor: patientPalette.lineSoft, paddingHorizontal: 14, paddingVertical: 12 }}>
@@ -110,7 +123,7 @@ function getAppointmentStatusLabel(item: AppointmentEntity) {
   return new Date(item.appointmentDate).getTime() < Date.now() ? "مكتمل" : "مؤكد";
 }
 
-function getAppointmentTone(item: AppointmentEntity) {
+function getAppointmentTone(item: AppointmentEntity, patientPalette: PatientPalette) {
   if (item.status === "cancelled") {
     return { background: patientPalette.red, text: patientPalette.red };
   }
@@ -121,8 +134,21 @@ function getAppointmentTone(item: AppointmentEntity) {
 }
 
 function ActionPill({ title, primary = false }: { title: string; primary?: boolean }) {
+  const patientPalette = usePatientPalette();
+
   return (
-    <View style={{ flex: 1, minHeight: 46, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: primary ? patientPalette.primary : "#243145", borderWidth: 1, borderColor: primary ? "transparent" : patientPalette.lineSoft }}>
+    <View
+      style={{
+        flex: 1,
+        minHeight: 46,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: primary ? patientPalette.primary : patientPalette.panelSoft,
+        borderWidth: 1,
+        borderColor: primary ? "transparent" : patientPalette.lineSoft
+      }}
+    >
       <Text style={{ color: primary ? "#FFFFFF" : patientPalette.textMuted, fontFamily: "Cairo_700Bold", fontSize: 14 }}>{title}</Text>
     </View>
   );

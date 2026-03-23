@@ -55,6 +55,18 @@ class DoctorsController {
     }
   };
 
+  getDoctorAppointmentSlots = async (req, res, next) => {
+    try {
+      const result = await this.doctorsService.getDoctorAppointmentSlots(req.params.id, req.query);
+      return ApiResponse.success(res, {
+        message: "Doctor appointment slots fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getMyProfile = async (req, res, next) => {
     try {
       const result = await this.doctorsService.getMyProfile(req.user.userId);

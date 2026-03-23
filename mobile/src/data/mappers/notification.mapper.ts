@@ -9,6 +9,6 @@ export const mapNotificationDtoToEntity = (dto: NotificationDto): NotificationEn
   isRead: dto.isRead,
   createdAt: dto.createdAt,
   conversationId: dto.conversationId,
-  entityId: dto.entityId
+  entityId: dto.entityId,
+  entityType: dto.entityType
 });
-

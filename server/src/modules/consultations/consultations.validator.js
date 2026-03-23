@@ -28,7 +28,9 @@ function hasValidPriceRange(payload) {
 export const createConsultationSchema = z.object({
   doctorId: z.string().min(5).max(64),
   subject: z.string().min(5).max(200),
-  description: z.string().min(10).max(5000)
+  description: z.string().min(10).max(5000),
+  preferredTime: z.string().trim().max(160).optional(),
+  requestType: z.enum(["online", "follow-up", "urgent"]).optional()
 });
 
 export const requestConsultationSchema = z
@@ -39,6 +41,8 @@ export const requestConsultationSchema = z
     specialization: z.string().trim().min(2).max(120).optional(),
     symptomsText: z.string().trim().max(2000).optional(),
     symptoms: z.array(z.string().trim().min(2).max(120)).max(15).optional(),
+    requestType: z.enum(["online", "follow-up", "urgent"]).optional(),
+    preferredTime: z.string().trim().max(160).optional(),
     city: z.string().trim().min(2).max(120).optional(),
     region: z.string().trim().min(2).max(120).optional(),
     patientCity: z.string().trim().min(2).max(120).optional(),
@@ -60,6 +64,8 @@ export const quickMatchConsultationSchema = z
   .object({
     subject: z.string().min(5).max(200),
     description: z.string().min(10).max(5000),
+    requestType: z.enum(["online", "follow-up", "urgent"]).optional(),
+    preferredTime: z.string().trim().max(160).optional(),
     specialization: z.string().trim().min(2).max(120).optional(),
     symptomsText: z.string().trim().max(2000).optional(),
     symptoms: z.array(z.string().trim().min(2).max(120)).max(15).optional(),
@@ -81,13 +87,19 @@ export const respondConsultationSchema = z.object({
 });
 
 export const updateConsultationStatusSchema = z.object({
-  status: z.enum(["accepted", "completed", "cancelled"])
+  status: z.enum(["accepted", "completed", "cancelled"]),
+  doctorResponse: z.string().min(5).max(5000).optional(),
+  reportUrl: z.string().url().max(2000).optional()
 });
 
 export const listConsultationsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   status: z.enum(["pending", "accepted", "completed", "cancelled"]).optional()
+});
+
+export const consultationIdParamsSchema = z.object({
+  id: z.string().min(5).max(64)
 });
 
 export function validate(schema, source = "body") {

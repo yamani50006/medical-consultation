@@ -9,5 +9,13 @@ export class NotificationRepositoryImpl implements INotificationRepository {
     const response = await this.service.list(params);
     return response.data.data.map(mapNotificationDtoToEntity);
   }
-}
 
+  async markAsRead(id: string) {
+    const response = await this.service.markAsRead(id);
+    return mapNotificationDtoToEntity(response.data.data);
+  }
+
+  async markAllAsRead() {
+    await this.service.markAllAsRead();
+  }
+}

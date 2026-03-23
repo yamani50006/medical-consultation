@@ -1,22 +1,20 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
-import { useDoctorsQuery } from "@/features/doctors";
-import { PatientScreen } from "@/features/home/components/PatientScreen";
-import { PatientSearchBar } from "@/features/home/components/PatientSearchBar";
-import { PatientSurface } from "@/features/home/components/PatientSurface";
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { ConsultationButton } from "@/features/consultations/components/ConsultationButton";
+import { ConsultationDoctorPickerCard } from "@/features/consultations/components/ConsultationDoctorPickerCard";
+import { ConsultationErrorState } from "@/features/consultations/components/ConsultationErrorState";
+import { ConsultationHeader } from "@/features/consultations/components/ConsultationHeader";
+import { ConsultationLoader } from "@/features/consultations/components/ConsultationLoader";
+import { ConsultationScreenLayout } from "@/features/consultations/components/ConsultationScreenLayout";
+import { ConsultationSurface } from "@/features/consultations/components/ConsultationSurface";
+import { ConsultationTextField } from "@/features/consultations/components/ConsultationTextField";
+import { useConsultationTheme } from "@/features/consultations/constants/consultation-theme";
+import { useCreateConsultationMutation } from "@/features/consultations/hooks/useConsultationMutations";
+import { useDoctorsQuery } from "@/features/doctors/hooks/useDoctorQueries";
 import { PatientStackParamList } from "@/navigation/types";
-import { Button } from "@/shared/components/Button";
-import { DoctorCard } from "@/shared/components/DoctorCard";
-import { EmptyState } from "@/shared/components/EmptyState";
-import { ErrorState } from "@/shared/components/ErrorState";
-import { InputField } from "@/shared/components/InputField";
-import { Loader } from "@/shared/components/Loader";
-import { ScreenHeader } from "@/shared/components/ScreenHeader";
-import { useUiStore } from "@/store/ui/ui.store";
 
 type Props = NativeStackScreenProps<PatientStackParamList, "ConsultationRequest">;
 
@@ -33,12 +31,12 @@ const consultationTypes = [
 ] as const;
 
 export function ConsultationRequestScreen({ navigation }: Props) {
+  const palette = useConsultationTheme();
   const [search, setSearch] = useState("");
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<(typeof consultationTypes)[number]["id"]>("online");
-  const [submitting, setSubmitting] = useState(false);
-  const query = useDoctorsQuery(search ? { search, supportsOnline: true } : { supportsOnline: true });
-  const showToast = useUiStore((state) => state.showToast);
+  const query = useDoctorsQuery(search ? { search, consultationMode: "online" } : { consultationMode: "online" });
+  const createConsultationMutation = useCreateConsultationMutation();
   const form = useForm<ConsultationFormValues>({
     defaultValues: {
       subject: "",
@@ -54,17 +52,34 @@ export function ConsultationRequestScreen({ navigation }: Props) {
   );
 
   return (
-    <PatientScreen>
-      <ScreenHeader title="طلب استشارة" subtitle="اختر الطبيب ثم أكمل تفاصيل الاستشارة" />
-      <PatientSurface style={{ gap: 14 }}>
+    <ConsultationScreenLayout>
+      <ConsultationHeader title="طلب استشارة" subtitle="اختر الطبيب ثم أكمل تفاصيل الاستشارة" />
+      <ConsultationSurface style={{ gap: 14 }}>
         <View style={{ alignItems: "flex-end", gap: 4 }}>
-          <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 22 }}>1. اختر الطبيب المناسب</Text>
-          <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "right" }}>
+          <Text style={{ color: palette.text, fontFamily: "Cairo_700Bold", fontSize: 22 }}>1. اختر الطبيب المناسب</Text>
+          <Text style={{ color: palette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "right" }}>
             البحث هنا مخصص للأطباء المتاحين للاستشارة عن بُعد.
           </Text>
         </View>
-        <PatientSearchBar value={search} onChangeText={setSearch} placeholder="ابحث باسم الطبيب أو التخصص..." />
-        <View style={{ flexDirection: "row-reverse", gap: 8, flexWrap: "wrap" }}>
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="ابحث باسم الطبيب أو التخصص..."
+          placeholderTextColor={palette.textSoft}
+          style={{
+            minHeight: 54,
+            borderRadius: 18,
+            borderWidth: 1,
+            borderColor: palette.border,
+            backgroundColor: palette.surfaceMuted,
+            color: palette.text,
+            paddingHorizontal: 16,
+            fontFamily: "Cairo_500Medium",
+            textAlign: "right",
+            writingDirection: "rtl"
+          }}
+        />
+        <View style={{ flexDirection: "row-reverse", gap: 8, flexWrap: "wrap"  }}>
           {consultationTypes.map((type) => {
             const isSelected = selectedType === type.id;
             return (
@@ -75,97 +90,107 @@ export function ConsultationRequestScreen({ navigation }: Props) {
                   paddingHorizontal: 14,
                   paddingVertical: 8,
                   borderRadius: 999,
-                  backgroundColor: isSelected ? patientPalette.primary : patientPalette.panelSoft,
+                  backgroundColor: isSelected ? palette.primary : palette.surfaceMuted,
                   borderWidth: 1,
-                  borderColor: isSelected ? "transparent" : patientPalette.lineSoft
+                  borderColor: isSelected ? "transparent" : palette.border
                 }}
               >
-                <Text style={{ color: isSelected ? "#FFFFFF" : patientPalette.textMuted, fontFamily: "Cairo_700Bold", fontSize: 13 }}>
+                <Text
+                  style={{
+                    color: isSelected ? palette.contrastText : palette.textMuted,
+                    fontFamily: "Cairo_700Bold",
+                    fontSize: 13
+                  }}
+                >
                   {type.label}
                 </Text>
               </Pressable>
             );
           })}
         </View>
-        {query.isLoading ? <Loader /> : null}
-        {query.isError ? <ErrorState message="تعذر تحميل الأطباء المتاحين للاستشارة" onRetry={query.refetch} /> : null}
+        {query.isLoading ? <ConsultationLoader /> : null}
+        {query.isError ? <ConsultationErrorState message="تعذر تحميل الأطباء المتاحين للاستشارة" onRetry={query.refetch} /> : null}
         {!query.isLoading && !query.isError && doctors.length === 0 ? (
-          <EmptyState title="لا يوجد أطباء متاحون الآن" description="جرّب تخصصاً آخر أو عد لاحقاً." />
+          <ConsultationSurface style={{ alignItems: "center" }}>
+            <Text style={{ color: palette.text, fontFamily: "Cairo_700Bold", fontSize: 18 }}>
+              لا يوجد أطباء متاحون الآن
+            </Text>
+            <Text style={{ color: palette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "center", lineHeight: 22 }}>
+              جرّب تخصصاً آخر أو عد لاحقاً.
+            </Text>
+          </ConsultationSurface>
         ) : null}
         <View style={{ gap: 12 }}>
           {doctors.map((doctor) => {
-            const isSelected = selectedDoctorId === doctor.id;
             return (
-              <View
+              <ConsultationDoctorPickerCard
                 key={doctor.id}
-                style={{
-                  borderRadius: 26,
-                  borderWidth: 1.5,
-                  borderColor: isSelected ? patientPalette.primary : "transparent"
-                }}
-              >
-                <DoctorCard doctor={doctor} onPress={() => setSelectedDoctorId(doctor.id)} />
-              </View>
+                doctor={doctor}
+                selected={selectedDoctorId === doctor.id}
+                onPress={() => setSelectedDoctorId(doctor.id)}
+              />
             );
           })}
         </View>
-      </PatientSurface>
+      </ConsultationSurface>
 
-      <PatientSurface style={{ gap: 14 }}>
+      <ConsultationSurface style={{ gap: 14 }}>
         <View style={{ alignItems: "flex-end", gap: 4 }}>
-          <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 22 }}>2. أكمل بيانات الطلب</Text>
-          <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "right" }}>
-            سيتم فتح المحادثة بعد إرسال الطلب مباشرة.
+          <Text style={{ color: palette.text, fontFamily: "Cairo_700Bold", fontSize: 22 }}>2. أكمل بيانات الطلب</Text>
+          <Text style={{ color: palette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "right" }}>
+            سيتم إنشاء الطلب وإظهاره مباشرة داخل صفحة "استشاراتي".
           </Text>
         </View>
-        <InputField control={form.control} name="subject" label="عنوان الاستشارة" placeholder="مثال: صداع متكرر منذ أسبوع" />
-        <InputField
+        <ConsultationTextField control={form.control} name="subject" label="عنوان الاستشارة" placeholder="مثال: صداع متكرر منذ أسبوع" />
+        <ConsultationTextField
           control={form.control}
           name="symptoms"
           label="الأعراض أو التفاصيل"
           multiline
           placeholder="اشرح الحالة باختصار، والأدوية المستخدمة إن وجدت"
         />
-        <InputField control={form.control} name="preferredTime" label="الوقت المفضل للتواصل" placeholder="مثال: اليوم بعد المغرب" />
+        <ConsultationTextField control={form.control} name="preferredTime" label="الوقت المفضل للتواصل" placeholder="مثال: اليوم بعد المغرب" />
         {selectedDoctor ? (
           <View
             style={{
               borderRadius: 20,
-              backgroundColor: patientPalette.panelSoft,
+              backgroundColor: palette.surfaceMuted,
               borderWidth: 1,
-              borderColor: patientPalette.lineSoft,
+              borderColor: palette.border,
               paddingHorizontal: 16,
               paddingVertical: 14,
               alignItems: "flex-end",
               gap: 4
             }}
           >
-            <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold" }}>الطبيب المختار: {selectedDoctor.fullName}</Text>
-            <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium" }}>{selectedDoctor.specialization}</Text>
+            <Text style={{ color: palette.text, fontFamily: "Cairo_700Bold" }}>الطبيب المختار: {selectedDoctor.fullName}</Text>
+            <Text style={{ color: palette.textMuted, fontFamily: "Cairo_500Medium" }}>{selectedDoctor.specialization}</Text>
           </View>
         ) : null}
-        <Button
+        <ConsultationButton
           title="إرسال طلب الاستشارة"
-          loading={submitting}
+          loading={createConsultationMutation.isPending}
           disabled={!selectedDoctor}
           onPress={form.handleSubmit(async (values) => {
             if (!selectedDoctor) {
               return;
             }
 
-            try {
-              setSubmitting(true);
-              showToast({
-                title: "تم إرسال الطلب",
-                description: `تم فتح مسار الاستشارة مع ${selectedDoctor.fullName}`
-              });
-              navigation.navigate("PatientTabs", { screen: "MessagesTab" });
-            } finally {
-              setSubmitting(false);
-            }
+            await createConsultationMutation.mutateAsync({
+              doctorId: selectedDoctor.id,
+              doctorName: selectedDoctor.fullName,
+              doctorAvatarUrl: selectedDoctor.profileImageUrl,
+              specialization: selectedDoctor.specialization,
+              subject: values.subject,
+              description: values.symptoms,
+              preferredTime: values.preferredTime,
+              requestType: selectedType
+            });
+
+            navigation.replace("MyConsultations");
           })}
         />
-      </PatientSurface>
-    </PatientScreen>
+      </ConsultationSurface>
+    </ConsultationScreenLayout>
   );
 }

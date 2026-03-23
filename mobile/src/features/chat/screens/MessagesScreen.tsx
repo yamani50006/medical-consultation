@@ -6,7 +6,7 @@ import { PatientHeader } from "@/features/home/components/PatientHeader";
 import { PatientScreen } from "@/features/home/components/PatientScreen";
 import { PatientSurface } from "@/features/home/components/PatientSurface";
 import { PatientSearchBar } from "@/features/home/components/PatientSearchBar";
-import { patientPalette } from "@/features/home/components/patient-theme";
+import { usePatientPalette } from "@/features/home/components/patient-theme";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { ErrorState } from "@/shared/components/ErrorState";
 import { Loader } from "@/shared/components/Loader";
@@ -14,6 +14,7 @@ import { Loader } from "@/shared/components/Loader";
 export function MessagesScreen() {
   const [search, setSearch] = useState("");
   const query = useConversationsQuery({ limit: 20 });
+  const patientPalette = usePatientPalette();
   const conversations = useMemo(() => {
     const normalized = search.trim().toLowerCase();
     if (!normalized) {

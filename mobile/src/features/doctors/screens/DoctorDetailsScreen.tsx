@@ -3,10 +3,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
 import { formatCurrency } from "@/core/helpers/format";
+import { useDoctorAppointmentSlotsQuery, useDoctorDetailsQuery } from "@/features/doctors/hooks/useDoctorQueries";
 import { PatientScreen } from "@/features/home/components/PatientScreen";
 import { PatientSurface } from "@/features/home/components/PatientSurface";
-import { patientPalette } from "@/features/home/components/patient-theme";
-import { useDoctorDetailsQuery } from "@/features/doctors";
+import { usePatientPalette } from "@/features/home/components/patient-theme";
 import { PatientStackParamList } from "@/navigation/types";
 import { Avatar } from "@/shared/components/Avatar";
 import { Button } from "@/shared/components/Button";
@@ -14,13 +14,13 @@ import { ErrorState } from "@/shared/components/ErrorState";
 import { Loader } from "@/shared/components/Loader";
 import { RatingStars } from "@/shared/components/RatingStars";
 import { ScreenHeader } from "@/shared/components/ScreenHeader";
-import { useState } from "react";
 
 type Props = NativeStackScreenProps<PatientStackParamList, "DoctorDetails">;
 
 export function DoctorDetailsScreen({ route, navigation }: Props) {
   const query = useDoctorDetailsQuery(route.params.doctorId);
-  const [bookingLoading, setBookingLoading] = useState(false);
+  const slotsQuery = useDoctorAppointmentSlotsQuery(route.params.doctorId, { days: 7 });
+  const patientPalette = usePatientPalette();
 
   if (query.isLoading) {
     return (
@@ -44,7 +44,7 @@ export function DoctorDetailsScreen({ route, navigation }: Props) {
     <PatientScreen>
       <ScreenHeader title="تفاصيل الطبيب" subtitle="راجع الملف ثم تابع إلى الحجز" />
       <PatientSurface style={{ alignItems: "center", gap: 14 }}>
-        <Avatar name={doctor.fullName} size={88} />
+        <Avatar name={doctor.fullName} imageUrl={doctor.profileImageUrl} size={88} />
         <View style={{ alignItems: "center", gap: 4 }}>
           <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 28 }}>{doctor.fullName}</Text>
           <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium" }}>{doctor.specialization}</Text>
@@ -79,29 +79,47 @@ export function DoctorDetailsScreen({ route, navigation }: Props) {
 
       <PatientSurface>
         <Text style={{ color: patientPalette.text, fontFamily: "Cairo_700Bold", fontSize: 18, textAlign: "right" }}>المواعيد المتاحة</Text>
-        <View style={{ flexDirection: "row-reverse", gap: 8, flexWrap: "wrap" }}>
-          {["12 أكتوبر", "13 أكتوبر", "14 أكتوبر", "15 أكتوبر", "09:00", "10:30", "05:00", "07:00"].map((item, index) => (
-            <View key={item} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: index % 3 === 0 ? `${patientPalette.primary}18` : patientPalette.panelSoft }}>
-              <Text style={{ color: index % 3 === 0 ? patientPalette.primary : patientPalette.textMuted, fontFamily: "Cairo_700Bold", fontSize: 13 }}>{item}</Text>
-            </View>
-          ))}
-        </View>
+        {slotsQuery.isLoading ? <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "right", marginTop: 10 }}>جارٍ تحميل المواعيد...</Text> : null}
+        {!slotsQuery.isLoading && (slotsQuery.data?.length ?? 0) > 0 ? (
+          <View style={{ flexDirection: "row-reverse", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+            {(slotsQuery.data ?? []).slice(0, 6).map((slot, index) => (
+              <View key={slot.appointmentDate} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: index % 2 === 0 ? `${patientPalette.primary}18` : patientPalette.panelSoft }}>
+                <Text style={{ color: index % 2 === 0 ? patientPalette.primary : patientPalette.textMuted, fontFamily: "Cairo_700Bold", fontSize: 13 }}>
+                  {formatDoctorSlotPreview(slot.appointmentDate)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {!slotsQuery.isLoading && !slotsQuery.isError && (slotsQuery.data?.length ?? 0) === 0 ? (
+          <Text style={{ color: patientPalette.textMuted, fontFamily: "Cairo_500Medium", textAlign: "right", marginTop: 10 }}>
+            الطبيب لم يحدد مواعيد حجز متاحة بعد.
+          </Text>
+        ) : null}
       </PatientSurface>
 
       <Button
-        title="حجز موعد"
-        loading={bookingLoading}
-        onPress={() => {
-          setBookingLoading(true);
-          navigation.navigate("Booking", { doctorId: doctor.id, doctorName: doctor.fullName });
-        }}
+        title={!slotsQuery.isLoading && !slotsQuery.isError && (slotsQuery.data?.length ?? 0) === 0 ? "لا توجد مواعيد حالياً" : "حجز موعد"}
+        disabled={!slotsQuery.isLoading && !slotsQuery.isError && (slotsQuery.data?.length ?? 0) === 0}
+        onPress={() => navigation.navigate("Booking", { doctorId: doctor.id, doctorName: doctor.fullName })}
       />
       <Button title="طلب استشارة" variant="secondary" onPress={() => navigation.navigate("ConsultationRequest")} />
     </PatientScreen>
   );
 }
 
+function formatDoctorSlotPreview(value: string) {
+  return new Intl.DateTimeFormat("ar-SA", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(value));
+}
+
 function StatBox({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
+  const patientPalette = usePatientPalette();
+
   return (
     <PatientSurface style={{ flex: 1, alignItems: "center", gap: 8, paddingVertical: 14 }}>
       <Ionicons name={icon} size={18} color={patientPalette.primary} />

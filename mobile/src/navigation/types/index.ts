@@ -22,10 +22,14 @@ export type PatientTabParamList = {
 
 export type PatientStackParamList = {
   PatientTabs: NavigatorScreenParams<PatientTabParamList> | undefined;
+  Notifications: undefined;
+  MyConsultations: undefined;
+  ConsultationDetails: { consultationId: string };
   ConsultationRequest: undefined;
   StartBooking: undefined;
   DoctorDetails: { doctorId: string };
   Booking: { doctorId: string; doctorName?: string };
+  EditPatientProfile: undefined;
 };
 
 export type DoctorStackParamList = {
