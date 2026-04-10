@@ -55,7 +55,21 @@ class DoctorScheduleController {
       next(error);
     }
   };
+
+  updateMySchedule = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const result = await this.doctorScheduleService.updateMySchedule(req.user.userId, id, req.body);
+      return ApiResponse.success(res, {
+        message: "Schedule updated successfully",
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
+
 
 
 export default new DoctorScheduleController();

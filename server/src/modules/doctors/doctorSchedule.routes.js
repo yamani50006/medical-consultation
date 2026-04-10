@@ -33,6 +33,14 @@ router.delete(
   doctorScheduleController.deleteMySchedule
 );
 
+router.patch(
+  "/schedules/:id",
+  authMiddleware,
+  roleMiddleware("DOCTOR"),
+  doctorScheduleController.updateMySchedule
+);
+
+
 
 
 

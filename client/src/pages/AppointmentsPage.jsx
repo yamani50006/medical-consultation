@@ -1,4 +1,5 @@
-import { CalendarRange } from "lucide-react";
+import { AlertTriangle, CalendarRange, Edit } from "lucide-react";
+
 import { startTransition, useEffect, useState } from "react";
 import FormError from "../components/forms/FormError";
 import AnimatedCard from "../components/shared/AnimatedCard";
@@ -20,10 +21,13 @@ import {
   getDoctorDailyAvailability,
   listDoctors,
   listMyDoctorSchedules,
-  setDoctorDailySchedule
+  setDoctorDailySchedule,
+  updateDoctorSchedule
 } from "../features/doctors/doctors.api";
 
 import SlotPicker from "../components/appointments/SlotPicker";
+import Modal from "../components/ui/Modal";
+
 
 import useAuth from "../hooks/useAuth";
 import { getErrorMessage } from "../utils/error";
@@ -53,6 +57,14 @@ export default function AppointmentsPage() {
   const [savingSchedule, setSavingSchedule] = useState(false);
   const [doctorSchedules, setDoctorSchedules] = useState([]);
   const [loadingDoctorSchedules, setLoadingDoctorSchedules] = useState(false);
+
+  // Modals state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeSchedule, setActiveSchedule] = useState(null);
+  const [editForm, setEditForm] = useState({ maxSlots: 10, location: "" });
+  const [isUpdating, setIsUpdating] = useState(false);
+
 
 
   useEffect(() => {
@@ -169,16 +181,53 @@ export default function AppointmentsPage() {
     }
   };
 
-  const handleDeleteSchedule = async (id) => {
-    if (!confirm("هل أنت متأكد من رغبتك في إلغاء جدول هذا اليوم؟")) return;
+  const handleDeleteClick = (schedule) => {
+    setActiveSchedule(schedule);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!activeSchedule) return;
+    setIsUpdating(true);
     setError("");
     try {
-      await deleteDoctorSchedule(id);
+      await deleteDoctorSchedule(activeSchedule.id);
+      setIsDeleteModalOpen(false);
+      setActiveSchedule(null);
       await loadData();
     } catch (err) {
       setError(getErrorMessage(err, "تعذر حذف الجدول."));
+    } finally {
+      setIsUpdating(false);
     }
   };
+
+  const handleEditClick = (schedule) => {
+    setActiveSchedule(schedule);
+    setEditForm({
+      maxSlots: schedule.maxSlots,
+      location: schedule.location
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const submitEdit = async (e) => {
+    e.preventDefault();
+    if (!activeSchedule) return;
+    setIsUpdating(true);
+    setError("");
+    try {
+      await updateDoctorSchedule(activeSchedule.id, editForm);
+      setIsEditModalOpen(false);
+      setActiveSchedule(null);
+      await loadData();
+    } catch (err) {
+      setError(getErrorMessage(err, "تعذر تحديث الجدول."));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
 
 
   const updateDaySchedule = (index, field, value) => {
@@ -362,13 +411,22 @@ export default function AppointmentsPage() {
                             📍 {schedule.location}
                           </p>
                         </div>
-                        <button 
-                          onClick={() => handleDeleteSchedule(schedule.id)}
-                          className="flex size-8 items-center justify-center rounded-full bg-danger/10 text-danger opacity-0 transition-opacity hover:bg-danger hover:text-white group-hover:opacity-100"
-                          title="إلغاء هذا اليوم"
-                        >
-                          ×
-                        </button>
+                        <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                          <button 
+                            onClick={() => handleEditClick(schedule)}
+                            className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
+                            title="تعديل"
+                          >
+                            <Edit className="size-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteClick(schedule)}
+                            className="flex size-8 items-center justify-center rounded-full bg-danger/10 text-danger transition-colors hover:bg-danger hover:text-white"
+                            title="إلغاء هذا اليوم"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
                       <div className="mt-4 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         <span>إجمالي الخانات</span>
@@ -383,6 +441,76 @@ export default function AppointmentsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        isOpen={isDeleteModalOpen} 
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="تأكيد الحذف"
+      >
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-danger/10 text-danger text-center">
+            <AlertTriangle className="size-8" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">هل أنت متأكد؟</h3>
+            <p className="mt-2 text-muted-foreground leading-relaxed">
+              سيتم حذف جدول يوم <span className="font-bold text-foreground">{activeSchedule && new Date(activeSchedule.date).toLocaleDateString("ar-EG", { weekday: 'long', day: 'numeric', month: 'long' })}</span>. لن يتمكن المرضى من رؤية هذا اليوم في قائمة الحجوزات.
+            </p>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button variant="danger" className="flex-1" onClick={confirmDelete} loading={isUpdating}>
+              تأكيد الحذف
+            </Button>
+            <Button variant="secondary" className="flex-1" onClick={() => setIsDeleteModalOpen(false)}>
+              تراجع
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Schedule Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="تعديل جدول الدوام"
+      >
+        <form onSubmit={submitEdit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10">
+              <p className="text-sm font-medium text-primary">
+                تعديل جدول يوم: {activeSchedule && new Date(activeSchedule.date).toLocaleDateString("ar-EG", { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+            </div>
+            
+            <Input
+              label="عدد الخانات"
+              type="number"
+              min="1"
+              max="50"
+              value={editForm.maxSlots}
+              onChange={(e) => setEditForm(prev => ({ ...prev, maxSlots: e.target.value }))}
+              required
+            />
+            <Input
+              label="موقع الدوام"
+              value={editForm.location}
+              onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+              required
+            />
+          </div>
+          
+          <div className="flex gap-3 pt-2">
+            <Button type="submit" variant="primary" className="flex-1" loading={isUpdating}>
+              حفظ التعديلات
+            </Button>
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsEditModalOpen(false)}>
+              إلغاء
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
 
 
 

@@ -40,4 +40,9 @@ export function deleteDoctorSchedule(id) {
   return api.delete(`/doctors/schedules/${id}`);
 }
 
+export function updateDoctorSchedule(id, data) {
+  return api.patch(`/doctors/schedules/${id}`, data);
+}
+
+
 

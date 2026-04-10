@@ -63,7 +63,40 @@ export default class DoctorScheduleService extends BaseService {
     return this.doctorScheduleRepository.delete(scheduleId);
   }
 
+  async updateMySchedule(userId, scheduleId, data) {
+    const doctor = await this.doctorScheduleRepository.findDoctorByUserId(userId);
+    if (!doctor) {
+      throw new AppError("Doctor profile not found", 404, "DOCTOR_PROFILE_NOT_FOUND");
+    }
+
+    const schedule = await this.doctorScheduleRepository.findById(scheduleId);
+    if (!schedule) {
+      throw new AppError("Schedule not found", 404, "SCHEDULE_NOT_FOUND");
+    }
+
+    if (schedule.doctorId !== doctor.id) {
+      throw new AppError("You can only update your own schedules", 403, "SCHEDULE_FORBIDDEN");
+    }
+
+    // If date is changing, check for conflicts
+    if (data.date) {
+      const startOfNewDate = new Date(data.date);
+      startOfNewDate.setUTCHours(0, 0, 0, 0);
+
+      const existing = await this.doctorScheduleRepository.findByDoctorAndDate(doctor.id, startOfNewDate);
+      if (existing && existing.id !== scheduleId) {
+        throw new AppError("A schedule already exists for this date", 400, "SCHEDULE_CONFLICT");
+      }
+      data.date = startOfNewDate;
+    }
+
+    if (data.maxSlots) data.maxSlots = Number(data.maxSlots);
+
+    return this.doctorScheduleRepository.update(scheduleId, data);
+  }
+
   async getDailySchedule(doctorId, date) {
+
 
     const schedule = await this.doctorScheduleRepository.findByDoctorAndDate(doctorId, new Date(date));
     const bookedSlots = await this.doctorScheduleRepository.getBookedSlots(doctorId, new Date(date));
