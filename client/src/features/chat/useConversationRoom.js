@@ -7,17 +7,21 @@ import { getErrorMessage } from "../../utils/error";
 import socketClient from "../realtime/socketClient";
 import { CHAT_MAX_ATTACHMENTS, CHAT_PAGE_SIZE } from "./chat.constants";
 
+const EMPTY_ARRAY = [];
+const EMPTY_META = {};
+
 export function useConversationRoom(conversationId) {
   const conversation = useConversationStore((state) =>
     state.items.find((item) => item.id === conversationId) || null
   );
-  const messages = useMessageStore((state) => state.messagesByConversation[conversationId] || []);
-  const meta = useMessageStore((state) => state.metaByConversation[conversationId] || {});
+  const messages = useMessageStore((state) => state.messagesByConversation[conversationId] || EMPTY_ARRAY);
+  const meta = useMessageStore((state) => state.metaByConversation[conversationId] || EMPTY_META);
   const loading = useMessageStore((state) => state.loadingByConversation[conversationId] || false);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const lastSeenRequestRef = useRef("");
+
 
   useEffect(() => {
     if (!conversationId) {
@@ -82,31 +86,28 @@ export function useConversationRoom(conversationId) {
     };
   }, [conversationId]);
 
-  const latestUnseenIncomingMessage = useMemo(
-    () =>
-      [...messages]
-        .reverse()
-        .find((message) => !message.isOwnMessage && message.status !== "SEEN"),
-    [messages]
-  );
+  const latestUnseenIncomingMessageId = useMemo(() => {
+    const msg = [...messages].reverse().find((m) => !m.isOwnMessage && m.status !== "SEEN");
+    return msg?.id || "";
+  }, [messages]);
 
   useEffect(() => {
-    if (!conversationId || !latestUnseenIncomingMessage?.id) {
+    if (!conversationId || !latestUnseenIncomingMessageId) {
       return;
     }
 
-    if (lastSeenRequestRef.current === latestUnseenIncomingMessage.id) {
+    if (lastSeenRequestRef.current === latestUnseenIncomingMessageId) {
       return;
     }
 
-    lastSeenRequestRef.current = latestUnseenIncomingMessage.id;
+    lastSeenRequestRef.current = latestUnseenIncomingMessageId;
 
     const markSeenRequest = async () => {
       try {
-        const ack = await socketClient.markMessageSeen(latestUnseenIncomingMessage.id);
+        const ack = await socketClient.markMessageSeen(latestUnseenIncomingMessageId);
         const result = ack?.success
           ? ack.data
-          : (await markMessageSeen(latestUnseenIncomingMessage.id)).data.data;
+          : (await markMessageSeen(latestUnseenIncomingMessageId)).data.data;
 
         useMessageStore.getState().updateMessageStatuses(conversationId, result.messageIds || [], {
           status: "SEEN",
@@ -114,12 +115,14 @@ export function useConversationRoom(conversationId) {
           deliveredAt: result.seenAt
         });
       } catch (error) {
-        lastSeenRequestRef.current = "";
+        // Keep the ref to avoid immediate retry loop if there's a persistent error
+        // It will be reset if conversationId changes or in next manual action
       }
     };
 
     markSeenRequest();
-  }, [conversationId, latestUnseenIncomingMessage]);
+  }, [conversationId, latestUnseenIncomingMessageId]);
+
 
   const sendMessage = async ({ body, files }) => {
     const normalizedFiles = (files || []).filter(Boolean).slice(0, CHAT_MAX_ATTACHMENTS);

@@ -10,18 +10,27 @@ function sortConversations(items) {
 
 function mergeConversations(currentItems, nextItems) {
   const map = new Map();
+  currentItems.forEach(item => map.set(item.id, item));
 
-  [...currentItems, ...nextItems].forEach((conversation) => {
+  let changed = false;
+  nextItems.forEach((conversation) => {
     if (conversation?.id) {
-      map.set(conversation.id, {
-        ...(map.get(conversation.id) || {}),
+      const existing = map.get(conversation.id);
+      const updated = {
+        ...(existing || {}),
         ...conversation
-      });
+      };
+      
+      if (!existing || JSON.stringify(existing) !== JSON.stringify(updated)) {
+        map.set(conversation.id, updated);
+        changed = true;
+      }
     }
   });
 
-  return sortConversations([...map.values()]);
+  return changed ? sortConversations([...map.values()]) : currentItems;
 }
+
 
 function calculateUnreadCount(items) {
   return items.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
