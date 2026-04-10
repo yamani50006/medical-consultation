@@ -15,7 +15,9 @@ import {
   listMyAppointments,
   updateAppointmentStatus
 } from "../features/appointments/appointments.api";
-import { listDoctors } from "../features/doctors/doctors.api";
+import { getDoctorDailyAvailability, listDoctors, setDoctorDailySchedule } from "../features/doctors/doctors.api";
+import SlotPicker from "../components/appointments/SlotPicker";
+
 import useAuth from "../hooks/useAuth";
 import { getErrorMessage } from "../utils/error";
 import { formatStatus, getStatusBadgeVariant } from "../utils/status";
@@ -30,8 +32,33 @@ export default function AppointmentsPage() {
   const [form, setForm] = useState({
     doctorId: "",
     appointmentDate: "",
+    slotNumber: null,
     notes: ""
   });
+  const [scheduleData, setScheduleData] = useState(null);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
+
+  // Doctor schedule management state
+  const [numDays, setNumDays] = useState(1);
+  const [doctorScheduleForm, setDoctorScheduleForm] = useState([
+    { date: "", maxSlots: 10, location: "" }
+  ]);
+  const [savingSchedule, setSavingSchedule] = useState(false);
+
+  useEffect(() => {
+    const total = parseInt(numDays) || 1;
+    setDoctorScheduleForm((prev) => {
+      const next = [...prev];
+      if (next.length < total) {
+        for (let i = next.length; i < total; i++) {
+          next.push({ date: "", maxSlots: 10, location: "" });
+        }
+      } else if (next.length > total) {
+        return next.slice(0, total);
+      }
+      return next;
+    });
+  }, [numDays]);
 
   const loadData = async () => {
     setError("");
@@ -63,19 +90,75 @@ export default function AppointmentsPage() {
     loadData();
   }, [isPatient]);
 
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (isPatient && form.doctorId && form.appointmentDate) {
+        setLoadingSchedule(true);
+        try {
+          const response = await getDoctorDailyAvailability(form.doctorId, form.appointmentDate);
+          setScheduleData(response.data.data);
+        } catch (err) {
+          console.error("Failed to fetch availability", err);
+          setScheduleData(null);
+        } finally {
+          setLoadingSchedule(false);
+        }
+      } else {
+        setScheduleData(null);
+      }
+    };
+
+    fetchAvailability();
+  }, [form.doctorId, form.appointmentDate, isPatient]);
+
   const handleBook = async (event) => {
     event.preventDefault();
+    if (scheduleData && !form.slotNumber) {
+      setError("يرجى اختيار خانة حجز متاحة.");
+      return;
+    }
+
     setError("");
     try {
       await bookAppointment({
         ...form,
         appointmentDate: new Date(form.appointmentDate).toISOString()
       });
-      setForm({ doctorId: "", appointmentDate: "", notes: "" });
+      setForm({ doctorId: "", appointmentDate: "", slotNumber: null, notes: "" });
+      setScheduleData(null);
       await loadData();
     } catch (err) {
       setError(getErrorMessage(err, "تعذر حجز الموعد."));
     }
+  };
+
+  const handleSetDoctorSchedule = async (event) => {
+    event.preventDefault();
+    setSavingSchedule(true);
+    setError("");
+    try {
+      const payload = doctorScheduleForm.map((s) => ({
+        ...s,
+        date: new Date(s.date).toISOString()
+      }));
+
+      await setDoctorDailySchedule(payload);
+      setNumDays(1);
+      setDoctorScheduleForm([{ date: "", maxSlots: 10, location: "" }]);
+      alert("تم تحديث الجدول بنجاح لجميع الأيام المحددة");
+    } catch (err) {
+      setError(getErrorMessage(err, "تعذر حفظ الجدول."));
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const updateDaySchedule = (index, field, value) => {
+    setDoctorScheduleForm((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
   };
 
   const handleStatusChange = async (id, status) => {
@@ -107,7 +190,7 @@ export default function AppointmentsPage() {
               <Select
                 label="اختر الطبيب"
                 value={form.doctorId}
-                onChange={(e) => setForm((prev) => ({ ...prev, doctorId: e.target.value }))}
+                onChange={(e) => setForm((prev) => ({ ...prev, doctorId: e.target.value, slotNumber: null }))}
                 required
               >
                 <option value="">اختر طبيبًا</option>
@@ -118,12 +201,43 @@ export default function AppointmentsPage() {
                 ))}
               </Select>
               <Input
-                label="تاريخ ووقت الموعد"
-                type="datetime-local"
+                label="تاريخ الموعد"
+                type="date"
                 value={form.appointmentDate}
-                onChange={(e) => setForm((prev) => ({ ...prev, appointmentDate: e.target.value }))}
+                onChange={(e) => setForm((prev) => ({ ...prev, appointmentDate: e.target.value, slotNumber: null }))}
                 required
               />
+
+              {loadingSchedule && (
+                <div className="md:col-span-2 py-4 text-center text-sm text-muted-foreground">
+                  جاري تحميل الخانات المتاحة...
+                </div>
+              )}
+
+              {scheduleData?.schedule && (
+                <div className="md:col-span-2 space-y-4">
+                  <div className="rounded-2xl bg-primary/5 p-4 border border-primary/10">
+                    <p className="text-sm font-medium text-primary">
+                      📍 موقع الدوام: {scheduleData.schedule.location}
+                    </p>
+                  </div>
+                  <SlotPicker
+                    maxSlots={scheduleData.schedule.maxSlots}
+                    bookedSlotNumbers={scheduleData.bookedSlotNumbers}
+                    selectedSlot={form.slotNumber}
+                    onSelect={(slot) => setForm((prev) => ({ ...prev, slotNumber: slot }))}
+                  />
+                </div>
+              )}
+
+              {form.appointmentDate && !loadingSchedule && !scheduleData?.schedule && (
+                <div className="md:col-span-2 py-4">
+                  <p className="text-sm text-amber-600 bg-amber-50 rounded-xl p-4 border border-amber-100">
+                    ⚠️ هذا الطبيب لم يقم بتحديد جدول لهذا اليوم بعد. يرجى اختيار تاريخ آخر أو طبيب آخر.
+                  </p>
+                </div>
+              )}
+
               <div className="md:col-span-2">
                 <Input
                   label="ملاحظات"
@@ -132,7 +246,7 @@ export default function AppointmentsPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <Button type="submit" variant="primary" size="lg">
+                <Button type="submit" variant="primary" size="lg" disabled={scheduleData && !form.slotNumber}>
                   <CalendarRange className="size-4" />
                   حجز الموعد
                 </Button>
@@ -140,7 +254,71 @@ export default function AppointmentsPage() {
             </form>
           </CardContent>
         </Card>
-      ) : null}
+      ) : (
+        <Card className="rounded-[34px] border-primary/20 bg-primary/[0.02]">
+          <CardContent className="p-8">
+            <div className="mb-6">
+              <h3 className="text-xl font-display font-semibold text-primary">إعداد جدول الدوام المتعدد</h3>
+              <p className="text-sm text-muted-foreground mt-1">حدد عدد الحجوزات المتاحة وموقع عملك لعدة أيام.</p>
+            </div>
+            
+            <form className="space-y-8" onSubmit={handleSetDoctorSchedule}>
+              <div className="w-full max-w-xs">
+                <Input
+                  label="عدد الأيام المراد جدولتها"
+                  type="number"
+                  min="1"
+                  max="14"
+                  value={numDays}
+                  onChange={(e) => setNumDays(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-6">
+                {doctorScheduleForm.map((day, index) => (
+                  <div key={index} className="grid gap-4 rounded-2xl border border-border/60 bg-card p-5 md:grid-cols-3">
+                    <div className="md:col-span-3 pb-1 border-b border-border/40 mb-2">
+                      <span className="text-sm font-semibold text-primary">اليوم {index + 1}</span>
+                    </div>
+                    <Input
+                      label="التاريخ"
+                      type="date"
+                      value={day.date}
+                      onChange={(e) => updateDaySchedule(index, "date", e.target.value)}
+                      required
+                    />
+                    <Input
+                      label="عدد الخانات"
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={day.maxSlots}
+                      onChange={(e) => updateDaySchedule(index, "maxSlots", e.target.value)}
+                      required
+                    />
+                    <Input
+                      label="موقع الدوام"
+                      placeholder="مثلاً: المستشفى التخصصي"
+                      value={day.location}
+                      onChange={(e) => updateDaySchedule(index, "location", e.target.value)}
+                      required
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4">
+                <Button type="submit" variant="primary" size="lg" loading={savingSchedule}>
+                  حفظ إعدادات الجدول ({numDays} أيام)
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       <FormError message={error} />
 

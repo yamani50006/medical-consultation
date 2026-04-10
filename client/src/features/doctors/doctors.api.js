@@ -23,3 +23,12 @@ export function getMyDoctorProfile() {
 export function updateMyDoctorProfile(payload) {
   return api.patch("/doctors/me/profile", payload);
 }
+
+export function setDoctorDailySchedule(payload) {
+  return api.post("/doctors/schedule", payload);
+}
+
+export function getDoctorDailyAvailability(doctorId, date) {
+  return api.get(`/doctors/${doctorId}/daily-schedule`, { params: { date } });
+}
+

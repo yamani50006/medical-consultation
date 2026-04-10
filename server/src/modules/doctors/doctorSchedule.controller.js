@@ -1,0 +1,37 @@
+import ApiResponse from "../../core/base/ApiResponse.js";
+import DoctorScheduleService from "./doctorSchedule.service.js";
+
+class DoctorScheduleController {
+  constructor() {
+    this.doctorScheduleService = new DoctorScheduleService();
+  }
+
+  setDailySchedule = async (req, res, next) => {
+    try {
+      const result = await this.doctorScheduleService.setDailySchedule(req.user.userId, req.body);
+      return ApiResponse.success(res, {
+        message: "Daily schedule set successfully",
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getDailySchedule = async (req, res, next) => {
+    try {
+      const { doctorId } = req.params;
+      const { date } = req.query;
+      const result = await this.doctorScheduleService.getDailySchedule(doctorId, date);
+      return ApiResponse.success(res, {
+        message: "Daily schedule fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+export default new DoctorScheduleController();
+
