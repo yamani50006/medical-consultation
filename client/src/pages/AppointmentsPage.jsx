@@ -15,7 +15,14 @@ import {
   listMyAppointments,
   updateAppointmentStatus
 } from "../features/appointments/appointments.api";
-import { getDoctorDailyAvailability, listDoctors, setDoctorDailySchedule } from "../features/doctors/doctors.api";
+import {
+  deleteDoctorSchedule,
+  getDoctorDailyAvailability,
+  listDoctors,
+  listMyDoctorSchedules,
+  setDoctorDailySchedule
+} from "../features/doctors/doctors.api";
+
 import SlotPicker from "../components/appointments/SlotPicker";
 
 import useAuth from "../hooks/useAuth";
@@ -44,6 +51,9 @@ export default function AppointmentsPage() {
     { date: "", maxSlots: 10, location: "" }
   ]);
   const [savingSchedule, setSavingSchedule] = useState(false);
+  const [doctorSchedules, setDoctorSchedules] = useState([]);
+  const [loadingDoctorSchedules, setLoadingDoctorSchedules] = useState(false);
+
 
   useEffect(() => {
     const total = parseInt(numDays) || 1;
@@ -74,9 +84,13 @@ export default function AppointmentsPage() {
           setDoctors(doctorsResponse.data.data);
         });
       } else {
-        const response = await listDoctorAppointments({ page: 1, limit: 50 });
+        const [appointmentsResponse, schedulesResponse] = await Promise.all([
+          listDoctorAppointments({ page: 1, limit: 50 }),
+          listMyDoctorSchedules()
+        ]);
         startTransition(() => {
-          setAppointments(response.data.data);
+          setAppointments(appointmentsResponse.data.data);
+          setDoctorSchedules(schedulesResponse.data.data);
         });
       }
     } catch (err) {
@@ -85,6 +99,7 @@ export default function AppointmentsPage() {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadData();
@@ -145,6 +160,7 @@ export default function AppointmentsPage() {
       await setDoctorDailySchedule(payload);
       setNumDays(1);
       setDoctorScheduleForm([{ date: "", maxSlots: 10, location: "" }]);
+      await loadData(); // Refresh list
       alert("تم تحديث الجدول بنجاح لجميع الأيام المحددة");
     } catch (err) {
       setError(getErrorMessage(err, "تعذر حفظ الجدول."));
@@ -152,6 +168,18 @@ export default function AppointmentsPage() {
       setSavingSchedule(false);
     }
   };
+
+  const handleDeleteSchedule = async (id) => {
+    if (!confirm("هل أنت متأكد من رغبتك في إلغاء جدول هذا اليوم؟")) return;
+    setError("");
+    try {
+      await deleteDoctorSchedule(id);
+      await loadData();
+    } catch (err) {
+      setError(getErrorMessage(err, "تعذر حذف الجدول."));
+    }
+  };
+
 
   const updateDaySchedule = (index, field, value) => {
     setDoctorScheduleForm((prev) => {
@@ -314,9 +342,48 @@ export default function AppointmentsPage() {
                 </Button>
               </div>
             </form>
+
+            {doctorSchedules.length > 0 && (
+              <div className="mt-12 space-y-6">
+                <div className="flex items-center justify-between border-b border-border/40 pb-4">
+                  <h3 className="text-xl font-display font-semibold text-primary">جداول دوامي المحفوظة</h3>
+                  <Badge variant="secondary">{doctorSchedules.length} أيام</Badge>
+                </div>
+                
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {doctorSchedules.map((schedule) => (
+                    <div key={schedule.id} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-white/50 p-5 transition-all hover:border-primary/30 hover:shadow-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="text-lg font-bold">
+                            {new Date(schedule.date).toLocaleDateString("ar-EG", { weekday: 'long', day: 'numeric', month: 'long' })}
+                          </p>
+                          <p className="text-sm font-medium text-primary">
+                            📍 {schedule.location}
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteSchedule(schedule.id)}
+                          className="flex size-8 items-center justify-center rounded-full bg-danger/10 text-danger opacity-0 transition-opacity hover:bg-danger hover:text-white group-hover:opacity-100"
+                          title="إلغاء هذا اليوم"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        <span>إجمالي الخانات</span>
+                        <span className="text-base font-bold text-foreground">{schedule.maxSlots}</span>
+                      </div>
+                      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/40 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
+
 
 
 

@@ -72,4 +72,14 @@ export default class DoctorScheduleRepository extends BaseRepository {
       }
     });
   }
+
+
+  listByDoctor(doctorId) {
+
+    return this.model.findMany({
+      where: { doctorId },
+      orderBy: { date: "asc" }
+    });
+  }
 }
+

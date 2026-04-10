@@ -36,7 +36,35 @@ export default class DoctorScheduleService extends BaseService {
   }
 
 
+  async getMySchedules(userId) {
+    const doctor = await this.doctorScheduleRepository.findDoctorByUserId(userId);
+    if (!doctor) {
+      throw new AppError("Doctor profile not found", 404, "DOCTOR_PROFILE_NOT_FOUND");
+    }
+
+    return this.doctorScheduleRepository.listByDoctor(doctor.id);
+  }
+
+  async deleteMySchedule(userId, scheduleId) {
+    const doctor = await this.doctorScheduleRepository.findDoctorByUserId(userId);
+    if (!doctor) {
+      throw new AppError("Doctor profile not found", 404, "DOCTOR_PROFILE_NOT_FOUND");
+    }
+
+    const schedule = await this.doctorScheduleRepository.findById(scheduleId);
+    if (!schedule) {
+      throw new AppError("Schedule not found", 404, "SCHEDULE_NOT_FOUND");
+    }
+
+    if (schedule.doctorId !== doctor.id) {
+      throw new AppError("You can only delete your own schedules", 403, "SCHEDULE_FORBIDDEN");
+    }
+
+    return this.doctorScheduleRepository.delete(scheduleId);
+  }
+
   async getDailySchedule(doctorId, date) {
+
     const schedule = await this.doctorScheduleRepository.findByDoctorAndDate(doctorId, new Date(date));
     const bookedSlots = await this.doctorScheduleRepository.getBookedSlots(doctorId, new Date(date));
 

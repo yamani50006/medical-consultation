@@ -31,7 +31,32 @@ class DoctorScheduleController {
       next(error);
     }
   };
+
+  listMySchedules = async (req, res, next) => {
+    try {
+      const result = await this.doctorScheduleService.getMySchedules(req.user.userId);
+      return ApiResponse.success(res, {
+        message: "My schedules fetched successfully",
+        data: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  deleteMySchedule = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      await this.doctorScheduleService.deleteMySchedule(req.user.userId, id);
+      return ApiResponse.success(res, {
+        message: "Schedule deleted successfully"
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
+
 
 export default new DoctorScheduleController();
 

@@ -32,3 +32,12 @@ export function getDoctorDailyAvailability(doctorId, date) {
   return api.get(`/doctors/${doctorId}/daily-schedule`, { params: { date } });
 }
 
+export function listMyDoctorSchedules() {
+  return api.get("/doctors/me/schedules");
+}
+
+export function deleteDoctorSchedule(id) {
+  return api.delete(`/doctors/schedules/${id}`);
+}
+
+

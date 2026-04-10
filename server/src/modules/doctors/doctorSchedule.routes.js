@@ -19,6 +19,21 @@ router.get(
   doctorScheduleController.getDailySchedule
 );
 
+router.get(
+  "/me/schedules",
+  authMiddleware,
+  roleMiddleware("DOCTOR"),
+  doctorScheduleController.listMySchedules
+);
+
+router.delete(
+  "/schedules/:id",
+  authMiddleware,
+  roleMiddleware("DOCTOR"),
+  doctorScheduleController.deleteMySchedule
+);
+
+
 
 
 export default router;
