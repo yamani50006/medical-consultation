@@ -2,6 +2,8 @@ import { Router } from "express";
 import { authMiddleware } from "../../core/middlewares/authMiddleware.js";
 import { roleMiddleware } from "../../core/middlewares/roleMiddleware.js";
 import doctorsController from "./doctors.controller.js";
+import doctorScheduleRoutes from "./doctorSchedule.routes.js";
+
 import {
   doctorAppointmentSlotsQuerySchema,
   getRecommendedDoctorsQuerySchema,
@@ -36,4 +38,7 @@ router.get(
 );
 router.get("/:id", doctorsController.getDoctorById);
 
+router.use("/", doctorScheduleRoutes);
+
 export default router;
+

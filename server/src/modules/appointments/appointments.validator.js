@@ -4,8 +4,10 @@ import AppError from "../../core/errors/AppError.js";
 export const bookAppointmentSchema = z.object({
   doctorId: z.string().min(5).max(64),
   appointmentDate: z.coerce.date(),
+  slotNumber: z.coerce.number().int().min(1).optional(),
   notes: z.string().max(2000).optional()
 });
+
 
 export const updateAppointmentStatusSchema = z.object({
   status: z.enum(["scheduled", "completed", "cancelled"])

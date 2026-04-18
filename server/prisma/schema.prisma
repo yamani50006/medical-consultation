@@ -214,8 +214,10 @@ model DoctorProfile {
   statusHistory     DoctorStatusHistory[]
   analyticsSnapshots DoctorAnalyticsSnapshot[]
   alerts            AdminAlert[]
+  dailySchedules    DoctorDailySchedule[]
 
   @@index([deletedAt])
+
   @@index([acceptingNewConsultations])
 }
 
@@ -231,6 +233,21 @@ model DoctorAvailabilitySlot {
   @@unique([doctorId, weekday, time])
   @@index([doctorId, weekday])
 }
+
+model DoctorDailySchedule {
+  id        String        @id @default(cuid())
+  doctorId  String
+  date      DateTime
+  maxSlots  Int
+  location  String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  doctor    DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, date])
+  @@index([doctorId, date])
+}
+
 
 model Post {
   id             String        @id @default(cuid())
@@ -362,7 +379,10 @@ model Appointment {
   appointmentDate DateTime
   notes           String?
   status          AppointmentStatus @default(SCHEDULED)
+  slotNumber      Int?
+  appointmentLocation String?
   createdAt       DateTime          @default(now())
+
   updatedAt       DateTime          @updatedAt
   patient         PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Cascade)
   doctor          DoctorProfile     @relation(fields: [doctorId], references: [id], onDelete: Cascade)

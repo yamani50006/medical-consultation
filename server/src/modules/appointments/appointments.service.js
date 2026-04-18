@@ -4,6 +4,8 @@ import { buildPaginationMeta } from "../../core/utils/pagination.util.js";
 import { isAppointmentDateMatchingAvailability } from "../doctors/doctorAvailability.util.js";
 import NotificationsService from "../notifications/notifications.service.js";
 import AppointmentsRepository from "./appointments.repository.js";
+import DoctorScheduleRepository from "../doctors/doctorSchedule.repository.js";
+
 
 const STATUS_SET = new Set(["SCHEDULED", "COMPLETED", "CANCELLED"]);
 
@@ -12,7 +14,9 @@ export default class AppointmentsService extends BaseService {
     super();
     this.appointmentsRepository = new AppointmentsRepository();
     this.notificationsService = new NotificationsService();
+    this.doctorScheduleRepository = new DoctorScheduleRepository();
   }
+
 
   async bookAppointment(userId, payload) {
     const patient = await this.appointmentsRepository.findPatientByUserId(userId);
@@ -38,6 +42,59 @@ export default class AppointmentsService extends BaseService {
       throw new AppError("Appointment date must be in the future", 400, "INVALID_APPOINTMENT_DATE");
     }
 
+    const appointmentDate = new Date(payload.appointmentDate);
+    const startOfDay = new Date(appointmentDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const dailySchedule = await this.doctorScheduleRepository.findByDoctorAndDate(doctor.id, startOfDay);
+
+    if (dailySchedule) {
+      // Slot-based booking logic
+      if (payload.slotNumber === undefined || payload.slotNumber === null) {
+        throw new AppError("Slot number is required for this date", 400, "SLOT_NUMBER_REQUIRED");
+      }
+
+      const slotNumber = Number(payload.slotNumber);
+      if (slotNumber < 1 || slotNumber > dailySchedule.maxSlots) {
+        throw new AppError("Invalid slot number", 400, "INVALID_SLOT_NUMBER");
+      }
+
+      const conflictingSlot = await this.appointmentsRepository.model.findFirst({
+        where: {
+          doctorId: doctor.id,
+          appointmentDate: {
+            gte: startOfDay,
+            lte: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)
+          },
+          slotNumber,
+          status: { in: ["SCHEDULED", "COMPLETED"] }
+        }
+      });
+
+      if (conflictingSlot) {
+        throw new AppError("This slot is already booked", 409, "SLOT_ALREADY_BOOKED");
+      }
+
+      const appointment = await this.appointmentsRepository.create({
+        patientId: patient.id,
+        doctorId: doctor.id,
+        appointmentDate,
+        notes: payload.notes || null,
+        status: "SCHEDULED",
+        slotNumber,
+        appointmentLocation: dailySchedule.location
+      });
+
+      await this.notificationsService.createForUser(doctor.user.id, {
+        type: "APPOINTMENT_BOOKED",
+        title: "تم حجز موعد جديد",
+        message: `قام ${patient.user.fullName} بحجز موعد جديد معك في ${dailySchedule.location}.`
+      });
+
+      return appointment;
+    }
+
+    // Fallback to legacy recurring slot logic
     if (!doctor.availabilitySlots?.length) {
       throw new AppError("Doctor has no available appointment slots", 400, "DOCTOR_HAS_NO_SLOTS");
     }
@@ -61,6 +118,7 @@ export default class AppointmentsService extends BaseService {
       notes: payload.notes || null,
       status: "SCHEDULED"
     });
+
 
     await this.notificationsService.createForUser(doctor.user.id, {
       type: "APPOINTMENT_BOOKED",

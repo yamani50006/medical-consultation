@@ -7,17 +7,27 @@ function sortMessages(items) {
 function mergeMessages(currentItems, nextItems) {
   const map = new Map();
 
-  [...currentItems, ...nextItems].forEach((message) => {
+  currentItems.forEach((message) => {
+    if (message?.id) map.set(message.id, message);
+  });
+
+  let changed = false;
+  nextItems.forEach((message) => {
     if (message?.id) {
-      map.set(message.id, {
-        ...(map.get(message.id) || {}),
-        ...message
-      });
+      const existing = map.get(message.id);
+      if (!existing || JSON.stringify(existing) !== JSON.stringify(message)) {
+        map.set(message.id, {
+          ...(existing || {}),
+          ...message
+        });
+        changed = true;
+      }
     }
   });
 
-  return sortMessages([...map.values()]);
+  return changed ? sortMessages([...map.values()]) : currentItems;
 }
+
 
 export const useMessageStore = create((set) => ({
   messagesByConversation: {},
