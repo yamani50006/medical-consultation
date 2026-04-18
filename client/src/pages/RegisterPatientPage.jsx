@@ -16,6 +16,7 @@ export default function RegisterPatientPage() {
   const { login } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -33,10 +34,62 @@ export default function RegisterPatientPage() {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
   };
 
+  const validateField = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "fullName":
+        if (!value.trim()) error = "الاسم الكامل مطلوب.";
+        else if (value.trim().length < 2) error = "الاسم الكامل يجب أن يكون على الأقل حرفين.";
+        break;
+      case "email":
+        if (!value.trim()) error = "البريد الإلكتروني مطلوب.";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = "البريد الإلكتروني غير صالح.";
+        break;
+      case "password":
+        if (!value) error = "كلمة المرور مطلوبة.";
+        else if (value.length < 6) error = "كلمة المرور يجب أن تكون على الأقل 6 أحرف.";
+        break;
+      case "dateOfBirth":
+        if (!value) error = "تاريخ الميلاد مطلوب.";
+        else {
+          const birthDate = new Date(value);
+          const today = new Date();
+          const age = today.getFullYear() - birthDate.getFullYear();
+          if (age < 0 || age > 120) error = "تاريخ الميلاد غير صالح.";
+        }
+        break;
+      default:
+        break;
+    }
+    setFieldErrors((prev) => ({ ...prev, [name]: error }));
+    return error;
+  };
+
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+    validateField(name, value);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError("");
+
+    // Validate all required fields
+    const errors = {};
+    Object.keys(form).forEach((key) => {
+      if (["fullName", "email", "password", "dateOfBirth"].includes(key)) {
+        const error = validateField(key, form[key]);
+        if (error) errors[key] = error;
+      }
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setLoading(false);
+      return;
+    }
+
     try {
       await registerPatient(form);
       await login({ email: form.email, password: form.password });
@@ -78,14 +131,16 @@ export default function RegisterPatientPage() {
           <CardContent className="p-8">
             <PageHeader title="إنشاء حساب مريض" subtitle="أنشئ حساب المريض في خطوات بسيطة" />
             <form className="grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
-              <Input label="الاسم الكامل" name="fullName" value={form.fullName} onChange={handleChange} required />
-              <Input label="البريد الإلكتروني" name="email" type="email" value={form.email} onChange={handleChange} required />
+              <Input label="الاسم الكامل" name="fullName" value={form.fullName} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.fullName} required />
+              <Input label="البريد الإلكتروني" name="email" type="email" value={form.email} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.email} required />
               <Input
                 label="كلمة المرور"
                 name="password"
                 type="password"
                 value={form.password}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.password}
                 required
               />
               <Select label="الجنس" name="gender" value={form.gender} onChange={handleChange}>
@@ -99,6 +154,8 @@ export default function RegisterPatientPage() {
                 type="date"
                 value={form.dateOfBirth}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.dateOfBirth}
                 required
               />
               <Input label="المدينة" name="city" value={form.city} onChange={handleChange} />

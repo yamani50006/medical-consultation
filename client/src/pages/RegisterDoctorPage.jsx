@@ -16,6 +16,7 @@ export default function RegisterDoctorPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -40,11 +41,74 @@ export default function RegisterDoctorPage() {
     setForm((prev) => ({ ...prev, [name]: checked }));
   };
 
+  const validateField = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "fullName":
+        if (!value.trim()) error = "الاسم الكامل مطلوب.";
+        else if (value.trim().length < 2) error = "الاسم الكامل يجب أن يكون على الأقل حرفين.";
+        break;
+      case "email":
+        if (!value.trim()) error = "البريد الإلكتروني مطلوب.";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) error = "البريد الإلكتروني غير صالح.";
+        break;
+      case "password":
+        if (!value) error = "كلمة المرور مطلوبة.";
+        else if (value.length < 6) error = "كلمة المرور يجب أن تكون على الأقل 6 أحرف.";
+        break;
+      case "specialization":
+        if (!value.trim()) error = "التخصص مطلوب.";
+        break;
+      case "yearsOfExperience":
+        if (!value) error = "سنوات الخبرة مطلوبة.";
+        else if (isNaN(value) || value < 0 || value > 70) error = "سنوات الخبرة يجب أن تكون رقمًا صحيحًا بين 0 و 70.";
+        break;
+      case "bio":
+        if (!value.trim()) error = "النبذة التعريفية مطلوبة.";
+        else if (value.trim().length < 10) error = "النبذة التعريفية يجب أن تكون على الأقل 10 أحرف.";
+        break;
+      case "licenseNumber":
+        if (!value.trim()) error = "رقم الترخيص مطلوب.";
+        break;
+      case "consultationFee":
+        if (value && (isNaN(value) || value < 0)) error = "سعر الاستشارة يجب أن يكون رقمًا إيجابيًا.";
+        break;
+      default:
+        break;
+    }
+    setFieldErrors((prev) => ({ ...prev, [name]: error }));
+    return error;
+  };
+
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+    validateField(name, value);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError("");
     setSuccessMessage("");
+
+    // Validate all required fields
+    const errors = {};
+    const requiredFields = ["fullName", "email", "password", "specialization", "yearsOfExperience", "bio", "licenseNumber"];
+    requiredFields.forEach((key) => {
+      const error = validateField(key, form[key]);
+      if (error) errors[key] = error;
+    });
+    if (form.consultationFee) {
+      const error = validateField("consultationFee", form.consultationFee);
+      if (error) errors.consultationFee = error;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setLoading(false);
+      return;
+    }
+
     try {
       await registerDoctor({
         ...form,
@@ -92,14 +156,16 @@ export default function RegisterDoctorPage() {
           <CardContent className="p-8">
             <PageHeader title="إنشاء حساب طبيب" subtitle="حسابات الأطباء تحتاج إلى موافقة الإدارة" />
             <form className="grid gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
-              <Input label="الاسم الكامل" name="fullName" value={form.fullName} onChange={handleChange} required />
-              <Input label="البريد الإلكتروني" name="email" type="email" value={form.email} onChange={handleChange} required />
+              <Input label="الاسم الكامل" name="fullName" value={form.fullName} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.fullName} required />
+              <Input label="البريد الإلكتروني" name="email" type="email" value={form.email} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.email} required />
               <Input
                 label="كلمة المرور"
                 name="password"
                 type="password"
                 value={form.password}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.password}
                 required
               />
               <Input
@@ -107,6 +173,8 @@ export default function RegisterDoctorPage() {
                 name="specialization"
                 value={form.specialization}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.specialization}
                 required
               />
               <Input
@@ -117,6 +185,8 @@ export default function RegisterDoctorPage() {
                 max="70"
                 value={form.yearsOfExperience}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.yearsOfExperience}
                 required
               />
               <Input label="المدينة" name="city" value={form.city} onChange={handleChange} />
@@ -126,6 +196,8 @@ export default function RegisterDoctorPage() {
                 name="licenseNumber"
                 value={form.licenseNumber}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.licenseNumber}
                 required
               />
               <Input
@@ -135,10 +207,12 @@ export default function RegisterDoctorPage() {
                 min="0"
                 value={form.consultationFee}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldErrors.consultationFee}
                 placeholder="اختياري"
               />
               <div className="md:col-span-2">
-                <Textarea label="نبذة تعريفية" name="bio" value={form.bio} onChange={handleChange} required />
+                <Textarea label="نبذة تعريفية" name="bio" value={form.bio} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.bio} required />
               </div>
               <div className="md:col-span-2 grid gap-3 lg:grid-cols-2">
                 <ToggleField
